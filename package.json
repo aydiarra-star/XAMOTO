@@ -20,6 +20,7 @@
     "build": "npm --workspace app-web run build",
     "start": "npm --workspace backend run start",
     "seed": "npm --workspace backend run seed",
+    "seed:sql": "tsx scripts/export-knowledge-sql.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "rm -f data/smoke.sqlite* && XAMOTO_DB_PATH=./data/smoke.sqlite NODE_ENV=test tsx tests/smoke.ts",

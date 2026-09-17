@@ -15,6 +15,7 @@
     "diagnostic/src/**/*.ts",
     "ai/src/**/*.ts",
     "backend/src/**/*.ts",
+    "scripts/**/*.ts",
     "tests/smoke.ts",
     "tests/api-shapes.mts",
     "shared/test/**/*.ts",

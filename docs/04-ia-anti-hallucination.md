@@ -104,10 +104,34 @@ L'assistant refuse et le dit :
 
 ## 7. Sources et traçabilité
 
-Le corpus (`ai/src/rag/corpus.ts`) contient 18 documents issus de 8 sources
+Le corpus (`ai/src/rag/corpus.ts`) contient 26 documents issus de 10 sources
 (SAE J2012, SAE J1979, ISO 15031, ISO 15765, documentation d'atelier XAMOTO, plages
 d'entretien publiées, référentiels de pièces, retours terrain documentés).
 
 Chaque document porte : éditeur, niveau de fiabilité, version, date, URL éventuelle,
 licence. Une réponse cite ses documents, avec un score de pertinence. Aucun extrait
 n'est présenté sans sa source.
+
+## 8. Ce que la phase 4 a ajouté au corpus
+
+Huit documents, chacun avec sa source, couvrant les systèmes que l'OBD ne lit pas
+ou lit mal — c'est-à-dire précisément ceux sur lesquels une IA générative a
+tendance à inventer :
+
+| Document | Source | Rôle |
+| --- | --- | --- |
+| Tests de disponibilité (moniteurs) | `src_sae_j1979` | Expliquer qu'un scan juste après un effacement ne prouve rien |
+| Freinage et ABS : lire un code de châssis | `src_workshop_methods` | Imposer l'ordre roue → câblage → masse → capteur → boîtier |
+| Airbags et prétensionneurs | `src_workshop_methods` | Énoncer les règles de sécurité pyrotechnique et refuser de guider |
+| Boîte automatique | `src_workshop_methods` | Dire ce que l'OBD donne, et ce qu'il garde pour lui |
+| Réseau CAN et codes U | `src_workshop_methods` | Éviter le remplacement de calculateur sur un code de communication |
+| Climatisation : nettoyer avant de recharger | `src_african_context` | Ordre de vérification adapté au sable et à la chaleur |
+| Embrayage : patinage ou manque de puissance | `src_african_context` | Distinguer deux causes que l'on confond systématiquement |
+| Vibrations et bruits de roulement | `src_workshop_methods` | Séparer une fréquence liée aux roues d'une fréquence moteur |
+
+La règle de rédaction est constante : ces documents décrivent des **méthodes**,
+des **ordres de vérification** et des **limites**, jamais des valeurs constructeur.
+Deux nouvelles sources les portent : `src_workshop_methods` (synthèse de méthodes
+d'atelier publiées, avec mention explicite de ce qui n'est pas fourni) et
+`src_iso_14229` (services de diagnostic étendus, citée pour expliquer une limite,
+sans lien externe inventé).

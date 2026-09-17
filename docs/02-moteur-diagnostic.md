@@ -40,6 +40,53 @@ Chaque règle produit des « effets » typés :
 Le plafonnement est la garantie structurelle du §10 : sans test réalisé ni mesure
 directe, aucune conclusion ne peut être annoncée comme `CONFIRMÉ`.
 
+## 2 bis. Règles par système (§15)
+
+Toutes les règles ne se valent pas selon la partie du véhicule concernée : lire
+un défaut moteur et lire un défaut de freinage ne demande pas la même prudence.
+Deux notions sont donc distinguées, et exposées à l'utilisateur :
+
+- les **règles générales** (cohérence des données, codes défaut documentés,
+  symptômes, historique) s'appliquent à tout scan, quel que soit le système ;
+- les **règles dédiées** portent la lecture propre à un système :
+  `brakingRules.ts` (freinage, ABS), `networkRules.ts` (réseau, électricité),
+  `transmissionRules.ts` (boîte), `climateRules.ts` (climatisation),
+  `coolingRules.ts` (refroidissement), `bodyRules.ts` (airbag, carrosserie).
+
+Chaque règle dédiée déclare les systèmes qu'elle couvre (`Rule.systems`), et
+`rulesForSystem()` / `RULES_BY_SYSTEM` donnent la vue inverse.
+
+### Ce que XAMOTO ne peut pas lire, il le dit
+
+`diagnostic/src/knowledge/systems.ts` décrit, pour les quinze systèmes de la
+nomenclature, ce que la lecture embarquée donne réellement et ce qu'elle ne donne
+pas — avec la source de l'affirmation. Le niveau de lecture est explicite :
+
+| Niveau | Signification |
+| --- | --- |
+| `codes_and_data` | Codes défaut **et** mesures disponibles |
+| `codes_only` | Codes défaut seulement |
+| `limited` | Accessible sur certains véhicules ou certaines interfaces |
+| `not_accessible` | Hors de portée de l'OBD standard |
+
+Exemples d'application, vérifiés par les tests :
+
+- **freinage / ABS** : un code de châssis (C0xxx) décrit un circuit, jamais une
+  pièce à remplacer. La règle impose l'ordre roue → câblage → masse → capteur →
+  boîtier, plafonne la certitude à « possible » et exige une mesure physique.
+- **réseau** : un code U n'autorise jamais « calculateur à remplacer » : la
+  batterie, les masses et les connecteurs passent avant la mesure du bus.
+- **boîte de vitesses** : le détail vit dans le calculateur de boîte ; le niveau
+  de lecture est `limited` et la certitude reste « possible ».
+- **airbag** : `not_accessible`. Aucune hypothèse technique n'est produite ; la
+  règle rappelle les règles de sécurité pyrotechnique et renvoie à un
+  professionnel équipé.
+- **climatisation** : le nettoyage du condenseur et du filtre d'habitacle passe
+  avant toute recharge de gaz.
+
+Un test échoue si un système de la nomenclature n'a **ni** règle dédiée **ni**
+limite documentée : un trou silencieux serait interprété comme « tout va bien ».
+
 ## 3. Pondération : ce qui compte le plus
 
 Un constat ne vaut pas un test. Le score d'une cause est une somme de contributions :

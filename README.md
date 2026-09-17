@@ -275,10 +275,10 @@ Détail complet : [docs/05-base-de-donnees.md](docs/05-base-de-donnees.md).
 
 ```bash
 npm run typecheck                                     # types paquets + backend + tests
-npm test                                              # 159 tests unitaires
+npm test                                              # 181 tests unitaires
 npm run test:watch                                     # en continu
 
-npm run test:e2e                                       # 39/39 de bout en bout (API + base)
+npm run test:e2e                                       # 42/42 de bout en bout (API + base)
 npm run test:screens                                   # 22/22 (16 écrans + 6 contrôles de langue)
 npm run build                                          # interface (app/web/dist)
 ```

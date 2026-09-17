@@ -50,7 +50,8 @@ abstract class BluetoothDriver {
 }
 
 abstract class BluetoothLink {
-  Future<void> write(String data);                   // commande ELM327 + ''
+  Future<void> write(String data);                   // commande ELM327 + '
+'
   void onData(void Function(String chunk) handler);  // octets reçus, par morceaux
   Future<void> close();
   bool isOpen();
@@ -73,7 +74,7 @@ Deux règles héritées de la couche déjà écrite, à ne pas contourner :
 
 1. La couche Bluetooth serveur est validée (`obd/test/bluetooth.test.ts`, 32 tests) et
    la PWA reste verte (`npm test`, `npm run test:e2e` → 37/37, `npm run test:screens`
-   → 16/16).
+   → 22/22, dont 6 contrôles de langue).
 2. L'API est stable et versionnée.
 3. Le modèle de synchronisation hors ligne est éprouvé sur la PWA.
 4. Un boîtier Bluetooth de référence a été testé manuellement, avec deux véhicules

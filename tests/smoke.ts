@@ -117,6 +117,27 @@ async function main(): Promise<void> {
     `HTTP ${assistantWo.statusCode}`,
   );
 
+  /* ── 3 quater. Couverture par système : dire ce qu'on ne peut pas lire ── */
+  const systems = await app.inject({ method: 'GET', url: '/api/knowledge/systems', headers: auth });
+  const systemsBody = systems.json() as { systems?: Array<{ system: string; readability: string; limitsFr: string; ruleIds: string[]; genericRuleCount: number }>; noticeFr?: string };
+  const coverageList = systemsBody.systems ?? [];
+  const airbag = coverageList.find((item) => item.system === 'airbag');
+  check(
+    'Couverture par système exposée pour toutes les parties du véhicule',
+    systems.statusCode === 200 && coverageList.length >= 15 && coverageList.every((item) => item.limitsFr.length > 20),
+    `${coverageList.length} systèmes`,
+  );
+  check(
+    'Un système non lisible est annoncé comme tel, jamais comme sain',
+    airbag?.readability === 'not_accessible' && typeof systemsBody.noticeFr === 'string',
+    `airbag : ${airbag?.readability ?? 'absent'}`,
+  );
+  check(
+    'Les règles dédiées et les règles générales sont distinguées',
+    coverageList.every((item) => Array.isArray(item.ruleIds)) && (coverageList[0]?.genericRuleCount ?? 0) > 0,
+    `${coverageList[0]?.genericRuleCount ?? 0} règles générales`,
+  );
+
   /* ── 4. Moteur : au moins une hypothèse et un test ───────────────────── */
   const hypotheses = scanBody.diagnostic?.hypotheses as Array<{ labelFr: string; certainty: string }> | undefined;
   const tests = scanBody.diagnostic?.tests as Array<{ testKey: string }> | undefined;

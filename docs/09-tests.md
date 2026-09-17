@@ -21,11 +21,13 @@ npm test                 # exécution unique
 npm run test:watch       # en continu pendant le développement
 ```
 
-**159 vérifications** réparties en huit suites, sans base de données ni réseau :
+**181 vérifications** réparties en dix suites, sans base de données ni réseau :
 
 | Suite | Ce qui est prouvé |
 | --- | --- |
 | `shared/test/levels.test.ts` (10) | Ordre des niveaux de gravité et de certitude, `worstSafety`, `weakestCertainty` (liste vide → NON DISPONIBLE), `capCertainty` qui ne peut que réduire |
+| `diagnostic/test/systems.test.ts` (18) | Règles **par système** : couverture des quinze systèmes, ordre de vérification freinage/réseau/boîte/airbag/climatisation, aucune cause confirmée là où l'OBD ne lit rien, déterminisme |
+| `diagnostic/test/seedSql.test.ts` (4) | L'export PostgreSQL (`database/seed/001_knowledge.sql`) est **exactement** celui que produit le code, et le graphe de pièces couvre toutes les pièces citées par la base |
 | `shared/test/i18n.test.ts` (19) | Multilingue honnête : trois langues déclarées, catalogue wolof cohérent (clé, français, anglais, relecteur), **aucune consigne de sécurité non relue n'est affichée en wolof**, rapport de langue exact, et repli annoncé quand une réponse n'est pas dans la langue demandée |
 | `obd/test/protocols.test.ts` (25) | Codage/décodage aller-retour des codes défaut, trames ELM327, PID non disponibles, masques de PID supportés, déterminisme et étiquetage du simulateur |
 | `obd/test/bluetooth.test.ts` (32) | Transport Bluetooth SPP/BLE sur un faux pont ELM327 : écho, marqueur `>`, réponses fragmentées, délais, liaison fermée, commande remplacée. Et l'honnêteté : sans pilote, **aucune liste d'appareils** ; un nom d'adaptateur n'est que « probable » ; un boîtier muet ne produit aucun scan |
@@ -70,7 +72,7 @@ inexistantes.
 npm run test:e2e
 ```
 
-39 vérifications, sur une base neuve :
+42 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
@@ -89,6 +91,7 @@ npm run test:e2e
 | 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
 | 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
 | 33 bis | Multilingue | Question en wolof → `language.effective = 'fr'`, `fallback: true`, explication présente ; aucune erreur de saisie |
+| 33 quater | Couverture par système | Les quinze systèmes sont exposés avec leurs limites ; l'airbag est annoncé `not_accessible`, jamais « sain » ; règles dédiées et générales distinguées |
 | 34–35 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |
 
 Le test volontairement « méchant » est le n° 27 : un code défaut inexistant dans la

@@ -72,10 +72,17 @@ Deux interdits structurants :
 | --- | --- | --- |
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
-| Tests unitaires | `npm test` | 159/159 |
-| Bout en bout API | `npm run test:e2e` | 39/39 |
+| Tests unitaires | `npm test` | 181/181 |
+| Bout en bout API | `npm run test:e2e` | 42/42 |
 | Rendu des écrans | `npm run test:screens` | 22/22 (16 écrans + 6 contrôles de langue) |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+La **phase 4** a enrichi la base documentaire et ajouté les règles par système :
+8 nouveaux documents sourcés (freinage/ABS, airbag, boîte automatique, réseau CAN,
+climatisation, embrayage, suspension, tests de disponibilité), 2 nouvelles sources,
+5 nouveaux tests guidés, 52 pièces ajoutées au graphe, la couverture des quinze
+systèmes (`GET /api/knowledge/systems`) et six fichiers de règles dédiées. Détail :
+[docs/02-moteur-diagnostic.md](02-moteur-diagnostic.md) §2 bis.
 
 La **phase 3 bis** a rendu vraie l'annonce multilingue : catalogue wolof partagé,
 règle « aucune consigne de sécurité non relue n'est affichée en wolof », repli

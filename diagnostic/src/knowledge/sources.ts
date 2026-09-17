@@ -75,6 +75,28 @@ export const KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     licence: 'Documentation du projet XAMOTO',
   },
   {
+    id: 'src_iso_14229',
+    title: 'ISO 14229-1 — Services de diagnostic unifiés (UDS)',
+    publisher: 'ISO',
+    reliability: 'official',
+    version: '14229-1:2020',
+    date: '2020-02-01',
+    url: null,
+    licence:
+      'Norme payante. Sert ici à expliquer une LIMITE : les données hors groupe motopropulseur (freinage, airbag, boîte automatique) passent par des services étendus ou des protocoles constructeur, pas par l’OBD standard.',
+  },
+  {
+    id: 'src_workshop_methods',
+    title: 'Méthodes d’atelier usuelles — freinage, réseau CAN, climatisation, transmission, embrayage, suspension',
+    publisher: 'Synthèse XAMOTO à partir de méthodes d’atelier publiées',
+    reliability: 'technical',
+    version: '1.0.0',
+    date: '2026-01-01',
+    url: null,
+    licence:
+      'XAMOTO restitue des MÉTHODES, des ORDRES DE VÉRIFICATION et des RÈGLES DE SÉCURITÉ, jamais des valeurs constructeur, des couples de serrage ou des capacités. La documentation du constructeur reste la référence.',
+  },
+  {
     id: 'src_garage_partner',
     title: 'Données déclarées par les garages partenaires XAMOTO',
     publisher: 'Réseau de garages XAMOTO',

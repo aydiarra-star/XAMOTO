@@ -25,7 +25,7 @@ enfreint n'est pas livrée.
 | 2 | `shared/src/levels.ts`, `app/web/src/components.tsx` | `obd/test/protocols.test.ts` : « toute lecture du simulateur est marquée simulated » ; Smoke : « Mention MODE SIMULATION présente » ; `obd/test/bluetooth.test.ts` : aucune liste d'appareils sans pilote |
 | 3 | `diagnostic/src/engine/index.ts`, `hypotheses.ts` | `diagnostic/test/engine.test.ts` : « aucune hypothèse ne peut être confirmée sans test » ; Smoke : « Aucune hypothèse confirmée sans test réalisé » |
 | 4 | `diagnostic/src/safety/index.ts` | `shared/test/levels.test.ts` : `worstSafety` , `diagnostic/test/engine.test.ts` : « la sécurité ne s'adoucit jamais » |
-| 5 | `ai/src/assistant/qa.ts` | `ai/test/anti-hallucination.test.ts` : phrase exacte du §16 pour un code non documenté ; Smoke : « Code non documenté : XAMOTO annonce l'absence de donnée » |
+| 5 | `ai/src/assistant/qa.ts`, `diagnostic/src/knowledge/systems.ts` | `ai/test/anti-hallucination.test.ts` : phrase exacte du §16 pour un code non documenté ; Smoke : « Code non documenté : XAMOTO annonce l'absence de donnée ». Et l'autre moitié de la règle : **ce que l'OBD ne peut pas lire est annoncé avant le diagnostic** — `diagnostic/test/systems.test.ts` : « un système sans règle a ses limites documentées », Smoke : « Un système non lisible est annoncé comme tel, jamais comme sain » |
 | 6 | `diagnostic/src/rules/*` | Types `evidence` dans `diagnostic_findings` ; `diagnostic/test/engine.test.ts` : « chaque hypothèse porte un score, un niveau et une raison » |
 | 7 | `ai/src/assistant/llm.ts` | `ai/test/anti-hallucination.test.ts` : réponse complète sans LLM, et repli si le fournisseur est en erreur |
 | 8 | `backend/src/routes/diagnostic.ts` | Smoke : « Résultat de test refusé sans confirmation » |

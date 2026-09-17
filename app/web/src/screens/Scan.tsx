@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, ApiError, type ApiObdCandidates, type ApiBluetoothDevices, type ApiScenario, type ApiScanResult, type ApiSymptom } from '../api';
+import { api, ApiError, type ApiObdCandidates, type ApiBluetoothDevices, type ApiScenario, type ApiScanResult, type ApiSymptom, type ApiSystemCoverage } from '../api';
 import { useVehicles } from '../vehicle-context';
 import { useI18n } from '../i18n';
 import { useAction, useAsync, formatDateTime } from '../hooks';
@@ -16,6 +16,36 @@ import { Card, EmptyState, ErrorBox, Notice, SimulationBanner, Spinner } from '.
  * Règle : si un PID n'est pas supporté par le véhicule, XAMOTO l'indique comme
  * NON DISPONIBLE — il ne le remplace jamais par une valeur estimée.
  */
+/**
+ * Libellés des quinze systèmes (§15). La clé interne n'est jamais affichée
+ * telle quelle à l'utilisateur.
+ */
+const SYSTEM_LABELS: Record<string, { fr: string; en: string }> = {
+  moteur: { fr: 'Moteur', en: 'Engine' },
+  allumage: { fr: 'Allumage', en: 'Ignition' },
+  injection: { fr: 'Injection', en: 'Injection' },
+  carburant: { fr: 'Alimentation en carburant', en: 'Fuel system' },
+  admission: { fr: 'Admission d’air', en: 'Air intake' },
+  echappement: { fr: 'Échappement', en: 'Exhaust' },
+  depollution: { fr: 'Dépollution', en: 'Emissions control' },
+  transmission: { fr: 'Transmission', en: 'Transmission' },
+  freinage: { fr: 'Freinage', en: 'Braking' },
+  abs: { fr: 'ABS', en: 'ABS' },
+  airbag: { fr: 'Airbags', en: 'Airbags' },
+  climatisation: { fr: 'Climatisation', en: 'Air conditioning' },
+  electrique: { fr: 'Électricité et électronique', en: 'Electrical and electronic' },
+  reseau: { fr: 'Réseau de communication', en: 'Communication network' },
+  carrosserie: { fr: 'Carrosserie', en: 'Body' },
+};
+
+/** Niveau de lecture embarquée : dit en clair, jamais un code technique. */
+const READABILITY_LABELS: Record<string, { fr: string; en: string }> = {
+  codes_and_data: { fr: 'Codes + mesures', en: 'Codes + data' },
+  codes_only: { fr: 'Codes seulement', en: 'Codes only' },
+  limited: { fr: 'Lecture partielle', en: 'Partial reading' },
+  not_accessible: { fr: 'Non accessible', en: 'Not accessible' },
+};
+
 export default function ScanScreen(): JSX.Element {
   const { vehicle, vehicles } = useVehicles();
   const { t, locale } = useI18n();
@@ -33,6 +63,13 @@ export default function ScanScreen(): JSX.Element {
   const scenarios = useAsync(() => api.get<{ scenarios: ApiScenario[]; notice: string }>('/api/obd/simulator/scenarios'), []);
   const symptomList = useAsync(() => api.get<{ symptoms: ApiSymptom[] }>('/api/knowledge/symptoms'), []);
   const candidates = useAsync(() => api.get<ApiObdCandidates>('/api/obd/candidates'), []);
+  const systems = useAsync(
+    () =>
+      api.get<{ systems: ApiSystemCoverage[]; noticeFr: string; noticeEn: string; rulesNoticeFr: string; rulesNoticeEn: string }>(
+        '/api/knowledge/systems',
+      ),
+    [],
+  );
   const bluetoothDevices = useAction(async () =>
     api.get<ApiBluetoothDevices>('/api/obd/bluetooth/devices'),
   );
@@ -254,6 +291,58 @@ export default function ScanScreen(): JSX.Element {
             </label>
           ))}
         </div>
+      </Card>
+
+      {/*
+        Ce que XAMOTO peut lire — et ce qu'il ne peut pas (§15, §47-5).
+        Un système hors de portée de l'OBD n'est PAS un système sain : la liste
+        affiche donc explicitement les systèmes non accessibles.
+      */}
+      <Card
+        title={t('Ce que XAMOTO peut lire, système par système', 'What XAMOTO can read, system by system')}
+        subtitle={t(
+          'La lecture embarquée ne couvre pas tout le véhicule. Ce tableau le dit avant le diagnostic, pas après.',
+          'On-board reading does not cover the whole vehicle. This table says so before the diagnosis, not after.',
+        )}
+      >
+        {systems.loading && <Spinner label={t('Chargement des limites de lecture…', 'Loading reading limits…')} />}
+        <ErrorBox message={systems.error} />
+        {systems.data && (
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t('Système', 'System')}</th>
+                    <th>{t('Lecture OBD', 'OBD reading')}</th>
+                    <th>{t('Ce que la lecture donne', 'What the reading gives')}</th>
+                    <th>{t('Ce qu’elle ne donne pas', 'What it does not give')}</th>
+                    <th>{t('Règles dédiées', 'Dedicated rules')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {systems.data.systems.map((coverage) => (
+                    <tr key={coverage.system}>
+                      <td>
+                        <strong>{SYSTEM_LABELS[coverage.system]?.[locale === 'en' ? 'en' : 'fr'] ?? coverage.system}</strong>
+                      </td>
+                      <td>
+                        <span className={`badge ${coverage.readability === 'not_accessible' ? '' : 'outline'}`}>
+                          {READABILITY_LABELS[coverage.readability]?.[locale === 'en' ? 'en' : 'fr'] ?? coverage.readability}
+                        </span>
+                      </td>
+                      <td className="small">{locale === 'en' ? coverage.whatObdGivesEn : coverage.whatObdGivesFr}</td>
+                      <td className="small">{locale === 'en' ? coverage.limitsEn : coverage.limitsFr}</td>
+                      <td className="small mono">{coverage.ruleIds.length > 0 ? coverage.ruleIds.length : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Notice tone="warn">{locale === 'en' ? systems.data.noticeEn : systems.data.noticeFr}</Notice>
+            <p className="hint">{locale === 'en' ? systems.data.rulesNoticeEn : systems.data.rulesNoticeFr}</p>
+          </>
+        )}
       </Card>
 
       <Card title={t('Paramètres du scan', 'Scan settings')}>

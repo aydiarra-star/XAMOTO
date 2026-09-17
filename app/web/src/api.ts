@@ -430,6 +430,24 @@ export interface ApiBluetoothDevices {
   certaintyEn: string;
 }
 
+/**
+ * Couverture par système (§15) : ce que XAMOTO sait lire, et ce qu'il ne sait
+ * pas lire. `readability` distingue une lecture complète d'une lecture partielle
+ * ou impossible — jamais présentée comme un « système sain ».
+ */
+export interface ApiSystemCoverage {
+  system: string;
+  readability: 'codes_and_data' | 'codes_only' | 'limited' | 'not_accessible';
+  whatObdGivesFr: string;
+  whatObdGivesEn: string;
+  limitsFr: string;
+  limitsEn: string;
+  tests: string[];
+  sourceId: string;
+  ruleIds: string[];
+  genericRuleCount: number;
+}
+
 export interface ApiScenario {
   id: string;
   labelFr: string;

@@ -77,6 +77,7 @@ n'a été enregistrée — XAMOTO ne remplace jamais une lecture échouée par u
 
 | Méthode | Route | Rôle |
 | --- | --- | --- |
+| GET | `/api/knowledge/systems` | Couverture par système : ce que l'OBD donne, ce qu'il ne donne pas, règles dédiées |
 | GET | `/api/knowledge/tests` | Tests guidés documentés |
 | GET | `/api/knowledge/symptoms` | Symptômes déclarables |
 | GET | `/api/knowledge/dtc?code=&system=&search=` | Codes défaut documentés |

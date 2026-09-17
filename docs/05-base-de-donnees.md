@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Développement, démonstration, hors ligne | SQLite embarqué | `backend/src/db/schema.ts` |
 | Production, multi-utilisateurs | PostgreSQL ≥ 14 / Supabase | `database/migrations/postgres/001_init.sql` |
-| Base de connaissances | PostgreSQL | `database/seed/001_knowledge.sql` |
+| Base de connaissances | PostgreSQL | `database/seed/001_knowledge.sql` (fichier **généré** : `npm run seed:sql`) |
 | Référentiels véhicules / garages / pièces | PostgreSQL | `database/seed/002_reference.sql` |
 
 Les deux schémas sont **identiques sur le plan logique** : mêmes tables, mêmes
@@ -100,6 +100,20 @@ npx tsx backend/src/db/seed-cli.ts --reset   # repartir d'une base vide
 npx tsx backend/src/db/seed-cli.ts --no-demo # sans véhicules de démonstration
 export XAMOTO_DB_PATH=./data/xamoto.sqlite
 ```
+
+### Export SQL : une seule source de vérité
+
+Le code TypeScript est la seule source de vérité du socle de connaissances
+(`diagnostic/src/knowledge`, `ai/src/rag`). Le fichier
+`database/seed/001_knowledge.sql` en est **généré** :
+
+```bash
+npm run seed:sql      # régénère l'export PostgreSQL
+```
+
+Un test (`diagnostic/test/seedSql.test.ts`) échoue si le fichier livré diffère de
+ce que produit le code : une installation PostgreSQL ne peut donc pas apprendre
+moins que l'application, ni autre chose.
 
 ### PostgreSQL / Supabase (production)
 

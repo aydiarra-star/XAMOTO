@@ -151,6 +151,13 @@ export interface Rule {
   id: string;
   /** Domaine lisible (affiché dans la trace d'audit). */
   domain: 'dtc' | 'mesure' | 'symptome' | 'historique' | 'coherence' | 'securite' | 'contexte' | 'guidage';
+  /**
+   * Systèmes du véhicule concernés (§15). Renseigné pour les règles qui portent
+   * une lecture PAR SYSTÈME (freinage, réseau, transmission, climatisation…) :
+   * c'est ce qui permet de dire ce que XAMOTO sait lire — et ce qu'il ne peut
+   * pas lire — sur chaque partie du véhicule, sans le deviner.
+   */
+  systems?: DtcSystem[];
   titleFr: string;
   titleEn: string;
   /** Source de la règle (§33). */

@@ -27,7 +27,29 @@ export type { SafetyAssessment, SafetyReason } from './safety/index.js';
 export { canIDrive, canIDriveFromDtcSeverity } from './safety/canIDrive.js';
 export type { CanIDriveAnswer } from './safety/canIDrive.js';
 
-export { ALL_RULES, RULES_BY_ID, RULES_BY_DOMAIN, ENGINE_RULES_VERSION, DTC_RULES, PID_RULES, SYMPTOM_RULES, HISTORY_RULES, COHERENCE_RULES } from './rules/index.js';
+export {
+  ALL_RULES,
+  RULES_BY_ID,
+  RULES_BY_DOMAIN,
+  RULES_BY_SYSTEM,
+  rulesBySystemView,
+  rulesForSystem,
+  ENGINE_RULES_VERSION,
+  DTC_RULES,
+  PID_RULES,
+  SYMPTOM_RULES,
+  HISTORY_RULES,
+  COHERENCE_RULES,
+  BRAKING_RULES,
+  NETWORK_RULES,
+  TRANSMISSION_RULES,
+  CLIMATE_RULES,
+  BODY_RULES,
+  COOLING_RULES,
+} from './rules/index.js';
+export type { SystemRuleView } from './rules/index.js';
+export { SYSTEM_COVERAGE, COVERAGE_BY_SYSTEM, ALL_SYSTEMS, coverageOf, NOT_READABLE_NOTICE } from './knowledge/systems.js';
+export type { SystemCoverage, ObdReadability } from './knowledge/systems.js';
 export type { Rule, RuleEffect, CauseEffect, DiagnosticContext, ReadingInput, DtcInput, HistoryInput } from './rules/types.js';
 export { pidEvidence, dtcEvidence, symptomEvidence, systemsFromCodes } from './rules/types.js';
 

@@ -267,6 +267,119 @@ export const RAG_DOCUMENTS: KnowledgeDocument[] = [
     version: V1,
     updatedAt: UPDATED,
   },
+  /* ─────── Systèmes non lisibles par l'OBD : la limite est documentée ─────── */
+  {
+    id: 'doc_obd_readiness_monitors',
+    sourceId: 'src_sae_j1979',
+    titleFr: 'Tests de disponibilité : pourquoi un scan juste après un effacement ne prouve rien',
+    titleEn: 'Readiness monitors: why a scan right after clearing proves nothing',
+    contentFr:
+      'Le calculateur ne surveille pas tout en permanence : il exécute des « moniteurs » (ratés d’allumage, circuit de carburant, catalyseur, sonde O2, circuit de vapeurs, EGR…) dans des conditions de conduite précises. Après un effacement de codes ou une coupure d’alimentation, ces moniteurs repassent à « non terminé » et le calculateur indique qu’il n’est « pas prêt ». Conséquence pour le diagnostic : un véhicule dont les moniteurs sont incomplets peut très bien avoir des défauts présents que le calculateur n’a pas encore eu l’occasion de détecter, et un véhicule « prêt » sans code défaut est un véhicule dont les moniteurs se sont exécutés — pas un véhicule dont toutes les pièces sont neuves. Pour un achat d’occasion, un effacement récent est un point à signaler : XAMOTO le fait apparaître au lieu de conclure que le véhicule est sain.',
+    contentEn:
+      'The ECU does not monitor everything continuously: it runs “monitors” (misfire, fuel system, catalyst, O2 sensor, evaporative system, EGR…) under specific driving conditions. After clearing codes or disconnecting the battery, these monitors return to “not complete” and the ECU reports “not ready”. Consequence for diagnosis: a vehicle with incomplete monitors may well have present faults the ECU has not yet had the chance to detect, and a “ready” vehicle with no fault code is a vehicle whose monitors ran — not a vehicle whose parts are all new. For a used-car purchase, a recent clear is a point to flag: XAMOTO surfaces it instead of concluding the vehicle is healthy.',
+    tags: ['moniteurs', 'readiness', 'contrôle technique', 'effacement', 'achat occasion', 'monitors'],
+    relatesTo: { systems: ['moteur', 'depollution'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_abs_braking_codes',
+    sourceId: 'src_workshop_methods',
+    titleFr: 'Freinage et ABS : pourquoi un code de châssis ne désigne jamais une pièce',
+    titleEn: 'Braking and ABS: why a chassis code never names a part',
+    contentFr:
+      'Le calculateur de freinage surveille des signaux : vitesse de chaque roue, alimentation de ses propres circuits, cohérence entre les roues. Quand il mémorise un code de capteur, il dit « ce signal ne me parvient pas ou ne me convient pas », pas « cette pièce est morte ». L’ordre de vérification qui évite les remplacements inutiles est toujours le même : 1) la roue concernée — cible magnétique sale, limaille, boue, pneu de taille différente ; 2) le câblage — connecteur oxydé, fil coupé près de la roue, gaine frottée ; 3) la masse et l’alimentation du calculateur ; 4) le capteur lui-même ; 5) seulement en dernier, le calculateur. Deux points de méthode comptent. D’une part, comparer les quatre vitesses de roue en roulant lentement situe le circuit fautif sans rien démonter. D’autre part, le liquide de frein usé (chargé en eau) abaisse le point d’ébullition et se traduit par une pédale qui s’enfonce à chaud : c’est une cause réelle qui ne produit aucun code. XAMOTO ne fournit aucune épaisseur de plaquette ni aucune cote constructeur : ces valeurs appartiennent à la documentation du véhicule.',
+    contentEn:
+      'The braking module monitors signals: each wheel speed, the supply to its own circuits, consistency between wheels. When it stores a sensor code, it says “this signal does not reach me or does not suit me”, not “this part is dead”. The check order that avoids useless replacements is always the same: 1) the wheel concerned — dirty magnetic target, metal debris, mud, a different tyre size; 2) the wiring — corroded connector, wire broken near the wheel, chafed loom; 3) module ground and supply; 4) the sensor itself; 5) only last, the module. Two method points matter. First, comparing the four wheel speeds while driving slowly locates the faulty circuit without dismantling anything. Second, worn brake fluid (water-loaded) lowers the boiling point and shows up as a pedal that sinks when hot: a real cause that produces no code. XAMOTO provides no pad thickness and no manufacturer specification: those belong to the vehicle documentation.',
+    tags: ['freinage', 'abs', 'capteur de roue', 'c0035', 'liquide de frein', 'chassis code'],
+    relatesTo: { dtc: ['C0035', 'U0121'], systems: ['freinage', 'abs'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_airbag_pyrotechnic_safety',
+    sourceId: 'src_workshop_methods',
+    titleFr: 'Airbags et prétensionneurs : ce que XAMOTO refuse de guider, et pourquoi',
+    titleEn: 'Airbags and pretensioners: what XAMOTO refuses to guide, and why',
+    contentFr:
+      'Un circuit d’airbag contient un détonateur. Une mesure faite avec un ohmmètre ou une alimentation envoyée dans ce circuit peut déclencher le déploiement : c’est rare, c’est grave, et c’est entièrement évitable. Les règles de sécurité s’appliquent sans exception : ne jamais mesurer un circuit de déclencheur, couper le contact et respecter le délai de décharge des condensateurs indiqué par le constructeur avant toute intervention, ne pas travailler sur un circuit sous tension, ne pas laisser un connecteur d’airbag débranché contact mis. Cela retire ce système de ce que XAMOTO peut accompagner : il n’existe pas de test guidé « airbag » dans l’application. En revanche, trois informations sont utiles et sûres : un voyant d’airbag allumé signifie que le système peut ne pas se déclencher et qu’un contrôle professionnel est nécessaire ; la cause la plus fréquente n’est pas un airbag mais un connecteur sous un siège (aspirateur, objets glissés, humidité) ; et un voyant d’airbag allumé peut faire échouer un contrôle technique dans plusieurs pays. XAMOTO dit cela, et s’arrête là.',
+    contentEn:
+      'An airbag circuit contains a detonator. A measurement made with an ohmmeter, or power sent into that circuit, can trigger deployment: it is rare, it is serious, and it is entirely avoidable. Safety rules apply without exception: never measure a deployer circuit, switch off the ignition and respect the manufacturer capacitor discharge delay before any work, never work on a live circuit, do not leave an airbag connector unplugged with the ignition on. This takes the system out of what XAMOTO can guide: there is no “airbag” guided test in the application. However, three pieces of information are useful and safe: a lit airbag warning light means the system may not deploy and a professional check is required; the most frequent cause is not an airbag but a connector under a seat (vacuum cleaner, objects slid underneath, moisture); and a lit airbag light can fail a roadworthiness test in several countries. XAMOTO says that, and stops there.',
+    tags: ['airbag', 'prétensionneur', 'pyrotechnique', 'sécurité', 'voyant', 'safety'],
+    relatesTo: { systems: ['airbag', 'carrosserie'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_automatic_transmission',
+    sourceId: 'src_workshop_methods',
+    titleFr: 'Boîte automatique : ce que l’OBD donne, et ce qu’il garde pour lui',
+    titleEn: 'Automatic transmission: what OBD gives, and what it keeps to itself',
+    contentFr:
+      'Sur une boîte automatique, l’OBD standard apporte peu : quelques codes de groupe motopropulseur, dont le plus courant signale que le calculateur de boîte a demandé l’allumage du voyant moteur, ou qu’un capteur de vitesse d’entrée ne renvoie pas un signal correct. Les valeurs qui permettraient un vrai diagnostic — pression de ligne, températures, glissement des embrayages, temps de passage, historique des rapports — restent dans le calculateur de boîte, accessibles seulement par le protocole constructeur. Conséquence directe : « la boîte est morte » n’est jamais une conclusion recevable à partir d’un scan OBD. Ce qui est vérifiable sans outil constructeur : le niveau et l’état de l’huile de boîte (couleur, odeur de brûlé, présence de limaille), la propreté du connecteur du calculateur de boîte, l’état du refroidisseur d’huile de boîte, et surtout le contexte d’usage — embouteillages, pentes, remorquage, transports chargés accélèrent l’usure de l’huile. Enfin, une boîte qui « patine » à froid puis se comporte normalement à chaud n’a pas la même signification qu’une boîte qui patine en permanence : cette distinction, l’utilisateur peut la décrire, et XAMOTO l’enregistre.',
+    contentEn:
+      'On an automatic transmission, standard OBD gives little: a few powertrain codes, the most common being that the transmission module requested the check-engine light, or that an input speed sensor does not return a correct signal. The values that would allow a real diagnosis — line pressure, temperatures, clutch slip, shift times, gear history — stay inside the transmission module, reachable only through the manufacturer protocol. Direct consequence: “the gearbox is dead” is never an acceptable conclusion from an OBD scan. What is checkable without a manufacturer tool: transmission fluid level and condition (colour, burnt smell, metal debris), the cleanliness of the transmission module connector, the condition of the transmission oil cooler, and above all the usage context — traffic jams, slopes, towing, loaded transport accelerate fluid wear. Finally, a gearbox slipping when cold then behaving normally when hot does not mean the same as one slipping permanently: this distinction the driver can describe, and XAMOTO records it.',
+    tags: ['boîte automatique', 'transmission', 'p0700', 'p0715', 'huile de boîte', 'automatic transmission'],
+    relatesTo: { dtc: ['P0700', 'P0715'], systems: ['transmission'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_can_network_ucodes',
+    sourceId: 'src_workshop_methods',
+    titleFr: 'Réseau CAN : les codes U et la tentation de remplacer un calculateur',
+    titleEn: 'CAN network: U codes and the temptation to replace a module',
+    contentFr:
+      'Les codes de la famille U signalent une communication interrompue ou perturbée entre calculateurs. Ce sont les codes qui coûtent le plus cher, parce qu’ils conduisent fréquemment à remplacer un boîtier qui n’était pas fautif. Une alimentation instable, une cosse de batterie desserrée, une masse moteur ou châssis oxydée, un connecteur mouillé et un fil pincé produisent exactement les mêmes codes qu’un calculateur en panne. L’ordre de vérification est donc invariable : tension de batterie au repos, tension de charge moteur tournant, état et serrage des cosses, continuité des masses, connecteurs des calculateurs concernés, puis seulement mesure du bus. Mesurer un bus CAN réellement demande un outil adapté (oscilloscope ou outil constructeur) : un multimètre moyenne les tensions et ne permet pas de conclure sur la forme du signal, la terminaison ou les perturbations. Deux situations particulières méritent d’être connues : sur certains véhicules, l’arrêt volontaire d’un calculateur de confort perturbe le réseau et allume plusieurs voyants ; et un premier scan suivi d’une batterie débranchée peut réveiller une série de codes U qui n’existent plus, parce que les calculateurs ne se sont pas encore re-synchronisés.',
+    contentEn:
+      'Codes in the U family indicate interrupted or disturbed communication between modules. They are the most expensive codes, because they frequently lead to replacing a module that was not at fault. An unstable supply, a loose battery terminal, a corroded engine or chassis ground, a wet connector and a pinched wire produce exactly the same codes as a failed module. The check order is therefore invariable: battery rest voltage, charging voltage with the engine running, terminal condition and tightness, ground continuity, connectors of the modules concerned, and only then bus measurement. Actually measuring a CAN bus requires a suitable tool (oscilloscope or manufacturer tool): a multimeter averages voltages and cannot conclude on signal shape, termination or interference. Two particular situations are worth knowing: on some vehicles, intentionally shutting down a comfort module disturbs the network and lights several warning lights; and a first scan followed by disconnecting the battery can wake a series of U codes that no longer exist, because modules have not re-synchronised yet.',
+    tags: ['réseau', 'can', 'u0100', 'u0121', 'masse', 'module', 'network'],
+    relatesTo: { dtc: ['U0100', 'U0121'], systems: ['reseau', 'electrique'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_air_conditioning_dust',
+    sourceId: 'src_african_context',
+    titleFr: 'Climatisation : nettoyer avant de recharger',
+    titleEn: 'Air conditioning: clean before topping up',
+    contentFr:
+      'Une climatisation qui refroidit mal se termine trop souvent par une recharge de gaz. Dans un contexte de chaleur, de poussière et de circulation dense, l’ordre inverse est pourtant le bon : 1) le filtre d’habitacle, qui limite le débit d’air et donne l’impression que le froid a disparu ; 2) le condenseur, placé devant le radiateur, que le sable et les insectes obstruent progressivement — un simple rinçage à l’eau restitue souvent le refroidissement ; 3) l’enclenchement du compresseur et la courroie d’accessoires, faciles à observer moteur tournant ; 4) seulement ensuite, les pressions, qui exigent une station et une habilitation. Une fuite se recherche avant de recharger : recharger sans chercher la fuite revient à payer deux fois, et le fluide rejeté dans l’atmosphère n’est pas neutre. À l’arrêt, dans un véhicule garé au soleil, un écart de quelques degrés entre l’air extérieur et l’air soufflé peut n’être qu’un effet de l’ensoleillement : comparer sur un même trajet, pas au démarrage.',
+    contentEn:
+      'Poor air conditioning too often ends in a refrigerant top-up. In a context of heat, dust and dense traffic, the reverse order is the right one: 1) the cabin filter, which limits air flow and makes cooling feel lost; 2) the condenser, mounted in front of the radiator, which sand and insects progressively block — a simple water rinse often restores cooling; 3) compressor engagement and the accessory belt, easy to observe with the engine running; 4) only then, pressures, which require a station and certification. A leak is looked for before topping up: topping up without finding the leak means paying twice, and refrigerant released into the atmosphere is not neutral. When stationary, in a vehicle parked in the sun, a few degrees between outside and blown air can be a sunlight effect alone: compare on the same trip, not at start-up.',
+    tags: ['climatisation', 'poussière', 'condenseur', 'filtre habitacle', 'fluide', 'climatisation afrique'],
+    relatesTo: { systems: ['climatisation'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_clutch_manual_gearbox',
+    sourceId: 'src_african_context',
+    titleFr: 'Embrayage : distinguer un patinage d’un manque de puissance',
+    titleEn: 'Clutch: telling slipping apart from a lack of power',
+    contentFr:
+      'Sur une boîte manuelle, une perte de puissance est souvent attribuée au moteur alors que l’embrayage patine — et l’inverse arrive aussi. Ce qui distingue les deux est observable sans outil : si le régime moteur monte franchement sans que la vitesse du véhicule suive, notamment en rapport élevé ou en côte, l’embrayage n’est plus capable de transmettre le couple. Trois situations accélèrent cette usure : la circulation en accordéon (embrayage utilisé en permanence), les démarrages en côte avec un véhicule chargé, et le fait de garder le pied posé sur la pédale d’embrayage en roulant. Deux erreurs symétriques sont à éviter : remplacer l’embrayage sur une simple impression sans avoir écarté une cause moteur (allumage, alimentation en carburant, prise d’air), et continuer à rouler sur un embrayage très usé, ce qui finit par user le volant moteur et transforme une réparation simple en réparation lourde. Un point de sécurité : un essai de patinage fait chauffer l’embrayage et ne doit pas être répété ; il se pratique sur une route dégagée, sans circulation, jamais en pente occupée.',
+    contentEn:
+      'On a manual gearbox, a loss of power is often blamed on the engine while the clutch is slipping — and the opposite happens too. The difference is observable without tools: if engine speed rises clearly without vehicle speed following, especially in a high gear or uphill, the clutch can no longer transmit torque. Three situations accelerate this wear: stop-and-go traffic (clutch used continuously), hill starts with a loaded vehicle, and keeping a foot resting on the clutch pedal while driving. Two symmetrical mistakes must be avoided: replacing the clutch on an impression without ruling out an engine cause (ignition, fuel supply, air leak), and continuing to drive on a very worn clutch, which eventually wears the flywheel and turns a simple repair into a major one. One safety point: a slip test heats the clutch and must not be repeated; it is done on an open road, without traffic, never on an occupied slope.',
+    tags: ['embrayage', 'boîte manuelle', 'patinage', 'perte de puissance', 'clutch'],
+    relatesTo: { systems: ['transmission', 'moteur'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
+  {
+    id: 'doc_suspension_steering_vibration',
+    sourceId: 'src_workshop_methods',
+    titleFr: 'Vibrations et bruits de roulement : séparer les roues de la transmission',
+    titleEn: 'Vibrations and bearing noises: separating wheels from the driveline',
+    contentFr:
+      'Une vibration n’est pas lisible par l’OBD : elle se situe par la vitesse à laquelle elle apparaît et par ce qui la fait varier. Une fréquence qui suit la vitesse du véhicule (et non le régime moteur) oriente vers les roues : équilibrage, pression, pneu déformé ou usé en facettes, plomb de balourd perdu, roulement de roue. Une fréquence qui suit le régime moteur oriente vers le moteur, son échappement ou un support fatigué. Une vibration qui apparaît au freinage pointe un disque voilé ou un moyeu sale. La vérification commence par ce qui ne coûte rien : pression des quatre pneus à froid et comparaison entre eux (une différence marquée suffit à créer une vibration et une usure irrégulière), examen visuel des flancs, puis, véhicule levé et posé sur chandelles, rotation à la main de chaque roue et recherche de jeu en saisissant la roue en haut et en bas. Enfin, une règle constante : une vibration apparue juste après le remplacement d’un pneu ou une réparation de suspension fait d’abord suspecter cette intervention récente — c’est le premier point à revoir, avant toute autre hypothèse.',
+    contentEn:
+      'A vibration cannot be read through OBD: it is located by the speed at which it appears and by what changes it. A frequency that follows vehicle speed (not engine speed) points to the wheels: balancing, pressure, a deformed or scalloped tyre, a lost balance weight, a wheel bearing. A frequency that follows engine speed points to the engine, its exhaust or a worn mount. A vibration appearing when braking points to a warped disc or a dirty hub. The check starts with what costs nothing: all four tyre pressures cold and compared with each other (a marked difference is enough to create vibration and uneven wear), a visual inspection of the sidewalls, then, with the vehicle lifted on stands, spinning each wheel by hand and looking for play by grabbing the wheel top and bottom. Finally, a constant rule: a vibration appearing just after a tyre change or suspension repair first makes that recent work suspect — it is the first thing to review, before any other hypothesis.',
+    tags: ['vibration', 'roulement', 'équilibrage', 'pression des pneus', 'suspension', 'vibration'],
+    relatesTo: { systems: ['transmission', 'moteur'] },
+    version: V1,
+    updatedAt: UPDATED,
+  },
 ];
 
 export const RAG_DOCUMENT_BY_ID = new Map(RAG_DOCUMENTS.map((d) => [d.id, d]));

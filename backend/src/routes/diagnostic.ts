@@ -13,10 +13,14 @@ import { assertVehicleAccess, authenticate, type AuthUser } from '../auth/index.
 import { buildStoredContext, recordEvent, refreshPassport, vehicleRowToApi } from '../services/scanService.js';
 import {
   ALL_DTC_KNOWLEDGE,
+  ALL_RULES,
   DiagnosticEngine,
   GUIDED_TESTS,
+  SYSTEM_COVERAGE,
   SYMPTOM_DEFINITIONS,
+  NOT_READABLE_NOTICE,
   buildGuidedSession,
+  rulesForSystem,
   buildInspectionReport,
   compareAfterRepair,
   describeUnknownDtc,
@@ -151,6 +155,43 @@ export async function diagnosticRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('preHandler', authenticate);
 
   /* ─────────────────────── Référentiels techniques ──────────────────────── */
+
+
+  /**
+   * Ce que XAMOTO peut lire, système par système (§15, §47-5).
+   *
+   * Cette route existe pour une raison précise : un système que XAMOTO ne peut
+   * PAS lire ne doit jamais être présenté comme un système sain. L'interface
+   * affiche donc la liste complète, y compris — surtout — les systèmes hors de
+   * portée de l'OBD standard.
+   */
+  app.get('/api/knowledge/systems', async (_request, reply) => {
+    return reply.send({
+      systems: SYSTEM_COVERAGE.map((coverage) => ({
+        system: coverage.system,
+        readability: coverage.readability,
+        whatObdGivesFr: coverage.whatObdGivesFr,
+        whatObdGivesEn: coverage.whatObdGivesEn,
+        limitsFr: coverage.limitsFr,
+        limitsEn: coverage.limitsEn,
+        tests: coverage.tests,
+        sourceId: coverage.sourceId,
+        // Règles DÉDIÉES à ce système, et nombre de règles GÉNÉRALES qui
+        // s'appliquent à tout scan (cohérence, codes défaut, symptômes,
+        // historique). Les deux informations sont données : afficher « 0 » tout
+        // court laisserait croire qu'aucune règle ne traite le système.
+        ruleIds: rulesForSystem(coverage.system).map((rule) => rule.id),
+        genericRuleCount: ALL_RULES.filter((rule) => !rule.systems || rule.systems.length === 0).length,
+      })),
+      noticeFr:
+        'Un système non accessible par l’OBD n’est pas un système en bon état : c’est un système que XAMOTO ne peut pas contrôler par ce moyen.',
+      noticeEn: NOT_READABLE_NOTICE.en,
+      rulesNoticeFr:
+        'Les règles dédiées portent la lecture propre à un système (freinage, réseau, transmission, climatisation). Les règles générales — cohérence des données, codes défaut documentés, symptômes, historique — s’appliquent à tout scan, quel que soit le système.',
+      rulesNoticeEn:
+        'Dedicated rules carry the system-specific reading (braking, network, transmission, air conditioning). General rules — data coherence, documented fault codes, symptoms, history — apply to every scan, whatever the system.',
+    });
+  });
 
   app.get('/api/knowledge/tests', async (_request, reply) => {
     return reply.send({

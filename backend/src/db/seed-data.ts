@@ -657,4 +657,718 @@ export const PARTS: PartSeed[] = [
     availabilitySn: 'medium',
     typicalPriceXof: 25000,
   },
+  {
+    partKey: 'batterie',
+    nameFr: 'Batterie de démarrage',
+    nameEn: 'Starter battery',
+    category: 'electrique',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'boitier_papillon',
+    nameFr: 'Boîtier papillon (corps de l’admission)',
+    nameEn: 'Throttle body',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'bouchon_radiateur',
+    nameFr: 'Bouchon de vase d’expansion',
+    nameEn: 'Expansion tank cap',
+    category: 'refroidissement',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'bouchon_reservoir',
+    nameFr: 'Bouchon de réservoir de carburant',
+    nameEn: 'Fuel filler cap',
+    category: 'carburant',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'canister',
+    nameFr: 'Canister à charbon actif (vapeurs de carburant)',
+    nameEn: 'Activated carbon canister',
+    category: 'depollution',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'capteur_arbre_a_cames',
+    nameFr: 'Capteur d’arbre à cames',
+    nameEn: 'Camshaft position sensor',
+    category: 'allumage',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'capteur_boite',
+    nameFr: 'Capteur de vitesse de boîte',
+    nameEn: 'Transmission speed sensor',
+    category: 'transmission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'capteur_debit_air',
+    nameFr: 'Capteur de débit d’air (débitmètre)',
+    nameEn: 'Mass air flow sensor',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'capteur_map',
+    nameFr: 'Capteur de pression de collecteur (MAP)',
+    nameEn: 'Manifold absolute pressure sensor',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'capteur_pression_carburant',
+    nameFr: 'Capteur de pression de carburant',
+    nameEn: 'Fuel pressure sensor',
+    category: 'carburant',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'capteur_pression_differentielle',
+    nameFr: 'Capteur de pression différentielle (FAP)',
+    nameEn: 'Differential pressure sensor (DPF)',
+    category: 'depollution',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'compresseur_climatisation',
+    nameFr: 'Compresseur de climatisation',
+    nameEn: 'A/C compressor',
+    category: 'climatisation',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'courroie_accessoires',
+    nameFr: 'Courroie d’accessoires',
+    nameEn: 'Accessory belt',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'dephaseur',
+    nameFr: 'Déphaseur d’arbre à cames',
+    nameEn: 'Camshaft phaser',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'durite_admission',
+    nameFr: 'Durite d’admission',
+    nameEn: 'Intake hose',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'durite_canister',
+    nameFr: 'Durite de canister',
+    nameEn: 'Canister hose',
+    category: 'depollution',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'durite_carburant',
+    nameFr: 'Durite de carburant',
+    nameEn: 'Fuel hose',
+    category: 'carburant',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'durite_frein',
+    nameFr: 'Flexible de frein',
+    nameEn: 'Brake hose',
+    category: 'freinage',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'durite_refroidissement',
+    nameFr: 'Durite de refroidissement',
+    nameEn: 'Coolant hose',
+    category: 'refroidissement',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'durite_suralimentation',
+    nameFr: 'Durite de suralimentation',
+    nameEn: 'Boost hose',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'echangeur_air',
+    nameFr: 'Échangeur air/air (intercooler)',
+    nameEn: 'Intercooler',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'electrovanne_calage',
+    nameFr: 'Électrovanne de calage de distribution',
+    nameEn: 'Timing control solenoid',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'electrovanne_purge',
+    nameFr: 'Électrovanne de purge du canister',
+    nameEn: 'Canister purge solenoid',
+    category: 'depollution',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'electrovanne_suralimentation',
+    nameFr: 'Électrovanne de commande de suralimentation',
+    nameEn: 'Boost control solenoid',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'etrier_frein',
+    nameFr: 'Étrier de frein',
+    nameEn: 'Brake caliper',
+    category: 'freinage',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'filtre_habitacle',
+    nameFr: 'Filtre d’habitacle',
+    nameEn: 'Cabin filter',
+    category: 'climatisation',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'fusible',
+    nameFr: 'Fusible et porte-fusible',
+    nameEn: 'Fuse and fuse holder',
+    category: 'electrique',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'gaz_climatisation',
+    nameFr: 'Fluide frigorigène de climatisation',
+    nameEn: 'A/C refrigerant',
+    category: 'climatisation',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'huile_boite',
+    nameFr: 'Huile de boîte de vitesses',
+    nameEn: 'Transmission fluid',
+    category: 'transmission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'huile_moteur',
+    nameFr: 'Huile moteur',
+    nameEn: 'Engine oil',
+    category: 'consommable',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'injecteur',
+    nameFr: 'Injecteur',
+    nameEn: 'Fuel injector',
+    category: 'injection',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'joint_admission',
+    nameFr: 'Joint d’admission',
+    nameEn: 'Intake gasket',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'joint_culasse',
+    nameFr: 'Joint de culasse',
+    nameEn: 'Head gasket',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'kit_distribution',
+    nameFr: 'Kit de distribution (courroie ou chaîne, galets)',
+    nameEn: 'Timing kit (belt or chain, tensioners)',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'kit_embrayage',
+    nameFr: 'Kit d’embrayage (disque, mécanisme, butée)',
+    nameEn: 'Clutch kit (disc, cover, release bearing)',
+    category: 'transmission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'liquide_frein',
+    nameFr: 'Liquide de frein',
+    nameEn: 'Brake fluid',
+    category: 'consommable',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'maitre_cylindre',
+    nameFr: 'Maître-cylindre de frein',
+    nameEn: 'Brake master cylinder',
+    category: 'freinage',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'manocontact_huile',
+    nameFr: 'Manocontact de pression d’huile',
+    nameEn: 'Oil pressure switch',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'moto_ventilateur',
+    nameFr: 'Moto-ventilateur de refroidissement',
+    nameEn: 'Cooling fan motor',
+    category: 'refroidissement',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'pompe_a_huile',
+    nameFr: 'Pompe à huile',
+    nameEn: 'Oil pump',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'pompe_carburant',
+    nameFr: 'Pompe à carburant',
+    nameEn: 'Fuel pump',
+    category: 'carburant',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'radiateur',
+    nameFr: 'Radiateur de refroidissement',
+    nameEn: 'Cooling radiator',
+    category: 'refroidissement',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'refroidisseur_egr',
+    nameFr: 'Refroidisseur de vanne EGR',
+    nameEn: 'EGR cooler',
+    category: 'depollution',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'regulateur_pression',
+    nameFr: 'Régulateur de pression de carburant',
+    nameEn: 'Fuel pressure regulator',
+    category: 'carburant',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'roulement_roue',
+    nameFr: 'Roulement de roue',
+    nameEn: 'Wheel bearing',
+    category: 'transmission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'sonde_o2_aval',
+    nameFr: 'Sonde O2 aval (après catalyseur)',
+    nameEn: 'Downstream O2 sensor',
+    category: 'depollution',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'sonde_temperature_moteur',
+    nameFr: 'Sonde de température de liquide de refroidissement',
+    nameEn: 'Coolant temperature sensor',
+    category: 'refroidissement',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'support_moteur',
+    nameFr: 'Support moteur ou boîte',
+    nameEn: 'Engine or gearbox mount',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'turbo',
+    nameFr: 'Turbocompresseur',
+    nameEn: 'Turbocharger',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'valve_pcv',
+    nameFr: 'Valve de recyclage des vapeurs d’huile (PCV)',
+    nameEn: 'PCV valve',
+    category: 'moteur',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
+  {
+    partKey: 'wastegate',
+    nameFr: 'Wastegate (régulation de pression de suralimentation)',
+    nameEn: 'Wastegate',
+    category: 'admission',
+    // Références, équivalents et prix : NON RENSEIGNÉS. XAMOTO n'invente ni une
+    // référence constructeur, ni un prix, ni une disponibilité (§28, §47).
+    oemReferences: [],
+    equivalents: [],
+    fitsBrands: [],
+    fitsEngines: [],
+    availabilitySn: 'unknown',
+    typicalPriceXof: null,
+  },
 ];
