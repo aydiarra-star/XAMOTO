@@ -157,6 +157,26 @@ describe('assistant : moteur déterministe sans LLM', () => {
     expect(result.answer.contentFr).toMatch(/garantir|garantie|professionnel/i);
   });
 
+  it('répond en français quand la langue demandée est le wolof, et le signale', async () => {
+    // Le wolof n'est pas produit par génération : une explication technique
+    // écrite automatiquement en wolof serait une invention (§16, §40).
+    const result = await askXamoto({ question: 'Puis-je rouler ?', contextResult: contextFor(richContext), locale: 'wo' });
+    expect(result.language.requested).toBe('wo');
+    expect(result.language.effective).toBe('fr');
+    expect(result.language.fallback).toBe(true);
+    expect(result.language.noticeFr).toMatch(/wolof/i);
+    expect(result.answer.contentFr.length).toBeGreaterThan(40);
+    // Aucun mot wolof inventé dans la réponse.
+    expect(result.answer.contentFr).not.toMatch(/natt|déggóó|jàpp/i);
+  });
+
+  it('répond en anglais sans message de repli lorsque l’anglais est demandé', async () => {
+    const result = await askXamoto({ question: 'What does P0420 mean?', contextResult: contextFor(richContext), locale: 'en' });
+    expect(result.language.effective).toBe('en');
+    expect(result.language.fallback).toBe(false);
+    expect(result.language.noticeFr).toBe('');
+  });
+
   it('affiche un système lisible, jamais la clé interne', async () => {
     const result = await askXamoto({ question: 'Que signifie P0420 ?', contextResult: contextFor(richContext) });
     expect(result.answer.contentFr).toContain('Dépollution');

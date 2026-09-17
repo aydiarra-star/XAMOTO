@@ -12,6 +12,7 @@ enfreint n'est pas livrée.
 | 5 | **XAMOTO doit savoir dire « je ne sais pas ».** | Phrase littérale d'indisponibilité ; `missingData` affiché ; conclusion possible « INDÉTERMINABLE ». |
 | 6 | **Toute conclusion est reliée à des données identifiables.** | Chaque constat porte ses preuves (`evidence`) et son origine. |
 | 7 | **Le diagnostic ne dépend pas de l'IA générative.** | Moteur de règles déterministe ; `XAMOTO_LLM_PROVIDER=none` fonctionne intégralement. |
+| 7 bis | **Aucune traduction inventée.** | Une consigne de sécurité n'est affichée en wolof qu'après relecture par un locuteur natif ; sinon le français s'affiche et l'interface l'explique ([docs/12-multilingue.md](12-multilingue.md)). |
 | 8 | **L'utilisateur valide ce qu'il observe.** | `confirmed: true` obligatoire pour enregistrer un résultat de test ; `consent: true` pour un partage. |
 | 9 | **Aucun jugement sur les personnes.** | Pas d'avis sur un garage, un prix ou un vendeur ; uniquement des faits et des questions à poser. |
 | 10 | **Aucune garantie sur l'état réel du véhicule.** | Avertissement de non-garantie dans toute réponse « Puis-je rouler ? » et dans tout rapport. |
@@ -30,6 +31,7 @@ enfreint n'est pas livrée.
 | 8 | `backend/src/routes/diagnostic.ts` | Smoke : « Résultat de test refusé sans confirmation » |
 | 9 | `diagnostic/src/engine/secondOpinion.ts` | `diagnostic/test/procedures.test.ts` : « ne juge jamais le professionnel ni le prix » |
 | 10 | `diagnostic/src/safety/canIDrive.ts` | `ai/test/anti-hallucination.test.ts` : « rejette une garantie de sécurité » ; Smoke : « Puis-je rouler ? avec avertissement de non-garantie » |
+| 7 bis | `shared/src/i18n.ts` | `shared/test/i18n.test.ts` : aucune consigne de sécurité `draft` n'est affichable ; Smoke : « Question en wolof : réponse honnêtement signalée en français » |
 
 ## Une question de conception, pas de communication
 

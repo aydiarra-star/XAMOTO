@@ -93,6 +93,30 @@ async function main(): Promise<void> {
     bluetoothBody.certainty === 'presumption';
   check('Aucun appareil Bluetooth inventé sans pilote', bluetoothHonest, `disponible : ${String(bluetoothBody.available)}, appareils : ${bluetoothBody.devices?.length ?? 0}`);
 
+  /* ── 3 ter. Multilingue : le wolof est annoncé, jamais inventé (§40) ── */
+  const assistantWo = await app.inject({
+    method: 'POST',
+    url: '/api/assistant/ask',
+    headers: auth,
+    payload: { question: 'Puis-je rouler ?', locale: 'wo', vehicleId: firstVehicle?.id ?? null },
+  });
+  const assistantWoBody = assistantWo.json();
+  check(
+    'Question en wolof : réponse honnêtement signalée en français',
+    assistantWo.statusCode === 200 &&
+      assistantWoBody.language?.requested === 'wo' &&
+      assistantWoBody.language?.effective === 'fr' &&
+      assistantWoBody.language?.fallback === true &&
+      typeof assistantWoBody.language?.noticeFr === 'string' &&
+      assistantWoBody.language.noticeFr.includes('wolof'),
+    `langue effective : ${assistantWoBody.language?.effective ?? 'inconnue'}`,
+  );
+  check(
+    'Langue wolof acceptée par l’API (aucune erreur de saisie)',
+    assistantWo.statusCode !== 400,
+    `HTTP ${assistantWo.statusCode}`,
+  );
+
   /* ── 4. Moteur : au moins une hypothèse et un test ───────────────────── */
   const hypotheses = scanBody.diagnostic?.hypotheses as Array<{ labelFr: string; certainty: string }> | undefined;
   const tests = scanBody.diagnostic?.tests as Array<{ testKey: string }> | undefined;

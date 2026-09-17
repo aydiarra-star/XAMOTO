@@ -41,7 +41,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ─────────────────────────────── Structure ──────────────────────────────── */
 
-.app { display: flex; min-height: 100%; }
+.app-outer { display: flex; flex-direction: column; min-height: 100%; }
+
+.app { display: flex; min-height: 100%; flex: 1; }
 
 .sidebar {
   width: 240px; flex-shrink: 0; background: var(--bg-soft); border-right: 1px solid var(--line);

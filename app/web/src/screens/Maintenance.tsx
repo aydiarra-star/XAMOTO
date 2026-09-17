@@ -100,7 +100,7 @@ export default function MaintenanceScreen(): JSX.Element {
           </thead>
           <tbody>
             {items.map((item) => {
-              const status = labelOf(STATUS_LABELS, item.status, { fr: item.status, en: item.status });
+              const status = labelOf(STATUS_LABELS, item.status, { fr: item.status, en: item.status, wo: '' });
               return (
                 <tr key={item.id}>
                   <td>

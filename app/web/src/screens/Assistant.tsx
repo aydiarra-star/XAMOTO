@@ -53,7 +53,11 @@ export default function AssistantScreen(): JSX.Element {
         diagnosticSessionId: lastDiagnostic.data?.diagnostics?.[0]?.id ?? null,
         locale,
       });
-      setMessages((list) => [...list, { role: 'bot', text: locale === 'en' ? answer.answerEn : answer.answerFr, answer }]);
+      // Le texte est choisi d'après la langue RÉELLEMENT utilisée par
+      // l'assistant (une question en wolof reçoit une réponse en français,
+      // signalée comme telle), jamais d'après le réglage d'interface seul.
+      const effective = answer.language?.effective ?? (locale === 'en' ? 'en' : 'fr');
+      setMessages((list) => [...list, { role: 'bot', text: effective === 'en' ? answer.answerEn : answer.answerFr, answer }]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t('Réponse impossible.', 'Could not answer.'));
     } finally {
@@ -109,6 +113,13 @@ export default function AssistantScreen(): JSX.Element {
               {message.text}
               {message.answer && (
                 <div className="meta">
+                  {/* Si la réponse n'est pas dans la langue demandée, on le dit :
+                      jamais de fausse impression de traduction (§40). */}
+                  {message.answer.language?.fallback && (
+                    <div className="warn">
+                      🌍 {locale === 'en' ? message.answer.language.noticeEn : message.answer.language.noticeFr}
+                    </div>
+                  )}
                   {message.answer.refused && <div>⚠️ {t('XAMOTO signale une limite', 'XAMOTO flags a limit')}</div>}
                   {message.answer.dataDisclosure.availableFacts.length > 0 && (
                     <div>

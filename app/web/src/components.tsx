@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CERTAINTY_LABELS, SAFETY_LABELS, ORIGIN_LABELS, useI18n } from './i18n';
+import { CERTAINTY_LABELS, ORIGIN_LABELS, SAFETY_LABELS, labelText, useI18n } from './i18n';
 
 export function Card({ title, subtitle, children, actions }: { title?: string; subtitle?: string; children: ReactNode; actions?: ReactNode }): JSX.Element {
   return (
@@ -20,37 +20,37 @@ export function Card({ title, subtitle, children, actions }: { title?: string; s
 
 export function CertaintyBadge({ level, showHelp = false }: { level: string; showHelp?: boolean }): JSX.Element {
   const { locale } = useI18n();
-  const fallback = CERTAINTY_LABELS.unavailable as { fr: string; en: string; color: string; help: string };
+  const fallback = CERTAINTY_LABELS.unavailable as { fr: string; en: string; wo: string; color: string; help: string };
   const label = (CERTAINTY_LABELS[level] as typeof fallback | undefined) ?? fallback;
   return (
     <span className="badge" style={{ background: `${label.color}22`, color: label.color, borderColor: `${label.color}66` }} title={showHelp ? label.help : undefined}>
       <span className="dot" style={{ background: label.color }} />
-      {locale === 'en' ? label.en : label.fr}
+      {labelText(label, locale)}
     </span>
   );
 }
 
 export function SafetyBadge({ level }: { level: string }): JSX.Element {
   const { locale } = useI18n();
-  const fallback = SAFETY_LABELS.normal as { fr: string; en: string; color: string; icon: string };
+  const fallback = SAFETY_LABELS.normal as { fr: string; en: string; wo: string; color: string; icon: string };
   const label = (SAFETY_LABELS[level] as typeof fallback | undefined) ?? fallback;
   return (
     <span className="badge" style={{ background: `${label.color}22`, color: label.color, borderColor: `${label.color}66` }} title={label.fr}>
       <span aria-hidden>{label.icon}</span>
-      {locale === 'en' ? label.en : label.fr}
+      {labelText(label, locale)}
     </span>
   );
 }
 
 export function OriginBadge({ origin }: { origin: string }): JSX.Element {
   const { locale } = useI18n();
-  const fallback = ORIGIN_LABELS.unknown as { fr: string; en: string };
+  const fallback = ORIGIN_LABELS.unknown as { fr: string; en: string; wo: string };
   const label = (ORIGIN_LABELS[origin] as typeof fallback | undefined) ?? fallback;
   const colors: Record<string, string> = { measured: '#22c55e', documented: '#38bdf8', calculated: '#a78bfa', estimated: '#fbbf24', simulated: '#fb923c', unknown: '#94a3b8' };
   const color = colors[origin] ?? colors.unknown ?? '#94a3b8';
   return (
     <span className="badge outline" style={{ color, borderColor: `${color}66` }} title="Origine de la donnée (§33)">
-      {locale === 'en' ? label.en : label.fr}
+      {labelText(label, locale)}
     </span>
   );
 }

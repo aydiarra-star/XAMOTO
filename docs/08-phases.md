@@ -72,10 +72,15 @@ Deux interdits structurants :
 | --- | --- | --- |
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
-| Tests unitaires | `npm test` | 138/138 |
-| Bout en bout API | `npm run test:e2e` | 37/37 |
-| Rendu des écrans | `npm run test:screens` | 16/16 |
+| Tests unitaires | `npm test` | 159/159 |
+| Bout en bout API | `npm run test:e2e` | 39/39 |
+| Rendu des écrans | `npm run test:screens` | 22/22 (16 écrans + 6 contrôles de langue) |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+La **phase 3 bis** a rendu vraie l'annonce multilingue : catalogue wolof partagé,
+règle « aucune consigne de sécurité non relue n'est affichée en wolof », repli
+toujours signalé, et acceptation du wolof par l'API et par l'assistant
+(détail : [docs/12-multilingue.md](12-multilingue.md)).
 
 La **phase 3** a apporté la couche Bluetooth SPP/BLE
 (`obd/src/adapters/bluetoothTransport.ts`) : transport fondé sur des pilotes de
@@ -96,5 +101,6 @@ lu sur un véhicule et la base de connaissances (détail :
   SPP/BLE que la plateforme web ne peut pas fournir (la couche de transport, elle,
   est prête et testée).
 - Enrichissement de la base documentaire (chaque ajout exige une source).
-- Traductions wolof relues par un locuteur natif (jamais de traduction automatique
-  présentée comme fiable).
+- Traductions wolof relues par un locuteur natif : c'est la seule manière pour
+  qu'une consigne de sécurité passe du français au wolof
+  ([docs/12-multilingue.md](12-multilingue.md)).

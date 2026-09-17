@@ -30,16 +30,18 @@ export function setToken(token: string | null): void {
   }
 }
 
-export function getStoredLocale(): 'fr' | 'en' {
+export function getStoredLocale(): 'fr' | 'en' | 'wo' {
   try {
     const value = window.localStorage.getItem(LOCALE_KEY);
-    return value === 'en' ? 'en' : 'fr';
+    // Toute langue enregistrée est respectée ; une valeur inconnue retombe sur
+    // le français, langue de référence.
+    return value === 'en' || value === 'wo' ? value : 'fr';
   } catch {
     return 'fr';
   }
 }
 
-export function setStoredLocale(locale: 'fr' | 'en'): void {
+export function setStoredLocale(locale: 'fr' | 'en' | 'wo'): void {
   try {
     window.localStorage.setItem(LOCALE_KEY, locale);
   } catch {
@@ -512,6 +514,8 @@ export interface ApiAnswer {
   dataDisclosure: { availableFacts: string[]; missingFacts: string[] };
   llm: { available: boolean; used: boolean; rejected: boolean; error?: string };
   validation: { checked: boolean; passed: boolean; violations: Array<{ type: string; severity: string; detailFr: string }> } | null;
+  /** Langue réellement utilisée pour la réponse, et raison de l'écart éventuel. */
+  language: { requested: 'fr' | 'en' | 'wo'; effective: 'fr' | 'en'; fallback: boolean; noticeFr: string; noticeEn: string; notice: string };
   contextAudit: string;
 }
 

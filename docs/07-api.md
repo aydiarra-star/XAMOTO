@@ -92,6 +92,31 @@ n'a été enregistrée — XAMOTO ne remplace jamais une lecture échouée par u
 | DELETE | `/api/assistant/conversations/:id` | Supprimer une conversation |
 | GET | `/api/assistant/capabilities` | Ce que l'assistant peut faire et ne peut pas faire |
 
+### 6.1 Langue de la réponse (§40)
+
+`POST /api/assistant/ask` accepte `locale` : `fr`, `en` ou `wo`. La réponse
+contient toujours un objet `language` qui dit la vérité sur la langue employée :
+
+```json
+{
+  "requested": "wo",
+  "effective": "fr",
+  "fallback": true,
+  "notice": "Réponse rédigée en français : la version wolof des explications de diagnostic n'est pas encore relue par un locuteur natif…"
+}
+```
+
+- `effective` est la langue réellement utilisée pour rédiger le texte.
+- `fallback: true` signale que `effective` diffère de `requested`, et `notice`
+  explique pourquoi. L'interface affiche cette mention dans la bulle de réponse.
+- L'assistant ne traduit jamais ses propres explications : une réponse technique
+  en wolof serait une invention ([docs/12-multilingue.md](12-multilingue.md)).
+
+Les libellés d'interface (niveaux de certitude, origines, statuts) proviennent du
+catalogue partagé `shared/src/i18n.ts` : une entrée n'est affichée en wolof que si
+elle a été relue, et les consignes de sécurité restent en français tant qu'un
+locuteur natif ne les a pas validées.
+
 ## 7. Rapports (§25)
 
 | Méthode | Route | Rôle |

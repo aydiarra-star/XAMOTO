@@ -12,14 +12,14 @@ interface DiagnosticResponse {
   simulationNotice: string | null;
 }
 
-const KIND_LABELS: Record<string, { fr: string; en: string }> = {
-  dtc: { fr: 'Code défaut', en: 'Fault code' },
-  pid: { fr: 'Mesure', en: 'Measurement' },
-  symptom: { fr: 'Symptôme', en: 'Symptom' },
-  history: { fr: 'Historique', en: 'History' },
-  coherence: { fr: 'Cohérence des données', en: 'Data consistency' },
-  test: { fr: 'Test', en: 'Test' },
-  maintenance: { fr: 'Entretien', en: 'Maintenance' },
+const KIND_LABELS: Record<string, { fr: string; en: string; wo: string }> = {
+  dtc: { fr: 'Code défaut', en: 'Fault code', wo: '' },
+  pid: { fr: 'Mesure', en: 'Measurement', wo: '' },
+  symptom: { fr: 'Symptôme', en: 'Symptom', wo: '' },
+  history: { fr: 'Historique', en: 'History', wo: '' },
+  coherence: { fr: 'Cohérence des données', en: 'Data consistency', wo: '' },
+  test: { fr: 'Test', en: 'Test', wo: '' },
+  maintenance: { fr: 'Entretien', en: 'Maintenance', wo: '' },
 };
 
 export default function DiagnosticScreen(): JSX.Element {
@@ -158,7 +158,7 @@ export default function DiagnosticScreen(): JSX.Element {
             <tbody>
               {diagnostic.findings.map((finding) => (
                 <tr key={finding.id}>
-                  <td className="small">{pickLabel(KIND_LABELS, finding.kind, locale, { fr: finding.kind, en: finding.kind })}</td>
+                  <td className="small">{pickLabel(KIND_LABELS, finding.kind, locale, { fr: finding.kind, en: finding.kind, wo: '' })}</td>
                   <td>
                     <strong>{locale === 'en' ? finding.titleEn : finding.titleFr}</strong>
                     <div className="small muted">{locale === 'en' ? finding.detailEn : finding.detailFr}</div>

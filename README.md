@@ -49,7 +49,7 @@ répond à la seule question qui compte vraiment quand un voyant s'allume :
 | **Rapports** | Rapport partageable par lien et QR code, lisible sans compte XAMOTO |
 | **Garages & pièces** | Annuaire (équipements, spécialités), partage **avec consentement explicite**, graphe de pièces et prix indicatifs |
 | **Hors ligne** | Interface en cache, opérations conservées puis synchronisées (idempotente) |
-| **Langues** | Français (complet), anglais, repères en wolof sur les messages essentiels |
+| **Langues** | Français (complet), anglais, wolof sur les libellés relus — les consignes de sécurité non relues restent en français et l'interface le dit ([docs/12-multilingue.md](docs/12-multilingue.md)) |
 
 Application web progressive (PWA) utilisable sur téléphone comme sur ordinateur,
 conçue d'abord pour un usage à Dakar, Abidjan, Bamako, Ouagadougou ou Douala.
@@ -275,11 +275,11 @@ Détail complet : [docs/05-base-de-donnees.md](docs/05-base-de-donnees.md).
 
 ```bash
 npm run typecheck                                     # types paquets + backend + tests
-npm test                                              # 138 tests unitaires
+npm test                                              # 159 tests unitaires
 npm run test:watch                                     # en continu
 
-npm run test:e2e                                       # 37/37 de bout en bout (API + base)
-npm run test:screens                                   # 16/16 écrans rendus sans erreur
+npm run test:e2e                                       # 39/39 de bout en bout (API + base)
+npm run test:screens                                   # 22/22 (16 écrans + 6 contrôles de langue)
 npm run build                                          # interface (app/web/dist)
 ```
 

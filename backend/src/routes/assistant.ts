@@ -13,6 +13,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { askXamoto, buildAiContext, createLlmProvider, documentById, serializeContext, validateAnswer } from '@xamoto/ai';
 import { buildMaintenancePlan } from '@xamoto/diagnostic';
+import { LOCALES } from '@xamoto/shared';
 import { all, audit, get, id, jsonParse, now, run, type Row } from '../db/index.js';
 import { assertVehicleAccess, authenticate, type AuthUser } from '../auth/index.js';
 import { canIDriveForContext, loadScanSnapshot, vehicleRowToApi } from '../services/scanService.js';
@@ -23,7 +24,8 @@ const askSchema = z.object({
   vehicleId: z.string().nullable().optional(),
   diagnosticSessionId: z.string().nullable().optional(),
   conversationId: z.string().nullable().optional(),
-  locale: z.enum(['fr', 'en']).default('fr'),
+  // Trois langues possibles ; l'assistant explique lui-même le repli éventuel.
+  locale: z.enum(LOCALES).default('fr'),
 });
 
 export async function assistantRoutes(app: FastifyInstance): Promise<void> {
@@ -216,9 +218,15 @@ export async function assistantRoutes(app: FastifyInstance): Promise<void> {
       },
       llm: outcome.llm,
       validation: finalValidation,
+      // Transparence linguistique : langue demandée, langue réellement utilisée,
+      // et la raison lorsqu'elles diffèrent.
+      language: {
+        ...outcome.language,
+        notice: data.locale === 'en' ? outcome.language.noticeEn : outcome.language.noticeFr,
+      },
       // Le contexte envoyé au modèle est restituable : l'utilisateur peut
       // vérifier ce que XAMOTO savait, et ce qu'il ne savait pas.
-      contextAudit: serializeContext(built, data.locale),
+      contextAudit: serializeContext(built, outcome.language.effective),
     });
   });
 
@@ -279,9 +287,10 @@ export async function assistantRoutes(app: FastifyInstance): Promise<void> {
         'Dire ce qui est mesuré, ce qui est documenté, ce qui est estimé.',
         'Dire « je ne dispose pas de cette donnée pour votre véhicule ».',
         'Proposer les tests qui départagent plusieurs causes possibles.',
-        'Répondre en français, en anglais et donner les repères en wolof.',
+        'Répondre en français et en anglais ; afficher les libellés wolof déjà relus.',
       ],
       cannotDo: [
+        'Inventer une traduction : une explication technique n’est jamais rédigée en wolof sans relecture humaine.',
         'Inventer une valeur, une spécification ou un couple de serrage.',
         'Présenter une hypothèse comme une certitude.',
         'Garantir la sécurité du véhicule ou d’une réparation.',

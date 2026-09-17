@@ -8,7 +8,8 @@
  * ne passe pas la vérification, XAMOTO affiche la réponse déterministe et
  * indique pourquoi.
  */
-import type { AiCitation } from '@xamoto/shared';
+import type { AiCitation, EffectiveLanguage, Locale } from '@xamoto/shared';
+import { effectiveLanguage } from '@xamoto/shared';
 import { systemsFromCodes } from '@xamoto/diagnostic';
 import { RAG_DOCUMENT_BY_ID } from '../rag/corpus.js';
 import { retrieve, type RetrievedDocument } from '../rag/index.js';
@@ -22,7 +23,8 @@ import { validateAnswer, VALIDATION_FALLBACK_FR, VALIDATION_FALLBACK_EN, type Va
 export interface AskInput {
   question: string;
   contextResult: ContextBuildResult;
-  locale?: 'fr' | 'en';
+  /** Langue demandée : fr, en, ou wo (§40). */
+  locale?: Locale;
   llm?: LlmProvider;
 }
 
@@ -31,10 +33,15 @@ export interface AskResult {
   validation: ValidationResult | null;
   /** Le LLM a-t-il été utilisé, et a-t-il été retenu ? */
   llm: { available: boolean; used: boolean; rejected: boolean; error?: string };
+  /** Langue réellement employée, et pourquoi (§40). */
+  language: EffectiveLanguage;
 }
 
 export async function askXamoto(input: AskInput): Promise<AskResult> {
-  const locale = input.locale ?? 'fr';
+  // Le wolof n'est jamais produit par génération : la réponse est rédigée dans
+  // la langue de référence et `language` explique l'écart à l'utilisateur.
+  const language = effectiveLanguage(input.locale ?? 'fr');
+  const locale: 'fr' | 'en' = language.effective;
   const { contextResult } = input;
   const llm = input.llm ?? new UnavailableLlmProvider();
 
@@ -62,7 +69,7 @@ export async function askXamoto(input: AskInput): Promise<AskResult> {
 
   // 3. LLM optionnel.
   if (!llm.available()) {
-    return { answer: deterministic, validation: null, llm: { available: false, used: false, rejected: false } };
+    return { answer: deterministic, validation: null, llm: { available: false, used: false, rejected: false }, language };
   }
 
   // Les salutations et demandes hors périmètre sont traitées directement :
@@ -72,6 +79,7 @@ export async function askXamoto(input: AskInput): Promise<AskResult> {
       answer: deterministic,
       validation: null,
       llm: { available: true, used: false, rejected: false, error: 'Intention traitée par le moteur déterministe.' },
+      language,
     };
   }
 
@@ -102,6 +110,7 @@ export async function askXamoto(input: AskInput): Promise<AskResult> {
         },
         validation,
         llm: { available: true, used: false, rejected: true },
+        language,
       };
     }
 
@@ -116,12 +125,14 @@ export async function askXamoto(input: AskInput): Promise<AskResult> {
       },
       validation,
       llm: { available: true, used: true, rejected: false },
+      language,
     };
   } catch (error) {
     return {
       answer: deterministic,
       validation: null,
       llm: { available: true, used: false, rejected: false, error: (error as Error).message },
+      language,
     };
   }
 }

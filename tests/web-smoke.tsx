@@ -11,7 +11,8 @@
 import { createElement, type ComponentType } from 'react';
 import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
-import { I18nProvider } from '../app/web/src/i18n';
+import { I18nProvider, labelText, useI18n, CERTAINTY_LABELS, SAFETY_LABELS } from '../app/web/src/i18n';
+import { CertaintyBadge, SafetyBadge } from '../app/web/src/components';
 import { AuthProvider } from '../app/web/src/auth';
 import { VehicleProvider } from '../app/web/src/vehicle-context';
 import LoginScreen from '../app/web/src/screens/Login';
@@ -101,7 +102,57 @@ for (const [name, Screen] of screens) {
   }
 }
 
-process.stdout.write(`\n=== ${checked}/${screens.length} écrans rendus sans erreur ===\n`);
+/* ── Multilingue : ce qui est affiché en wolof, et ce qui ne l'est pas ───── */
+
+/**
+ * Sonde de langue : elle rend exactement ce que l'utilisateur verrait si sa
+ * langue était le wolof. Elle vérifie deux choses opposées :
+ *   - un libellé relu (ou provisoire mais non critique) s'affiche en wolof ;
+ *   - une consigne de sécurité non relue s'affiche en FRANÇAIS, jamais dans un
+ *     wolof approximatif.
+ */
+function LocaleProbe(): JSX.Element {
+  const { t, locale, wolof } = useI18n();
+  return createElement(
+    'div',
+    null,
+    createElement('span', { id: 'locale' }, locale),
+    createElement('span', { id: 'nav' }, t('Accueil', 'Home')),
+    createElement('span', { id: 'notice' }, locale === 'wo' ? wolof.noticeFr : ''),
+    createElement(SafetyBadge, { level: 'critical' }),
+    createElement(CertaintyBadge, { level: 'unavailable' }),
+  );
+}
+
+store.set('xamoto.locale', 'wo');
+const wolofHtml = renderToString(createElement(I18nProvider, null, createElement(LocaleProbe)));
+store.delete('xamoto.locale');
+
+const expectations: Array<[string, boolean, string]> = [
+  ['Le wolof est la langue active', wolofHtml.includes('>wo<'), 'locale'],
+  ['Un libellé du catalogue s’affiche en wolof', wolofHtml.includes('Kër gi'), 'nav.home'],
+  ['Le bandeau annonce la relecture en cours', wolofHtml.includes('relecture'), 'wolofReport'],
+  ['Une consigne de sécurité reste en français', wolofHtml.includes('CRITIQUE') && !wolofHtml.includes('NORMAL'), 'safety.critical'],
+  ['Un libellé non critique passe en wolof', wolofHtml.includes('AMUL'), 'certainty.unavailable'],
+  [
+    'Aucun mot wolof n’est fabriqué pour la sécurité',
+    labelText(SAFETY_LABELS.critical!, 'wo') === 'CRITIQUE' && labelText(CERTAINTY_LABELS.unavailable!, 'wo') === 'AMUL',
+    'labelText',
+  ],
+];
+
+process.stdout.write('\nLangue wolof :\n');
+for (const [label, ok, detail] of expectations) {
+  if (ok) {
+    checked += 1;
+    process.stdout.write(`✔ ${label} — ${detail}\n`);
+  } else {
+    failures.push(`${label} (${detail})`);
+    process.stdout.write(`✘ ${label} — ${detail}\n`);
+  }
+}
+
+process.stdout.write(`\n=== ${checked}/${screens.length + expectations.length} vérifications de rendu réussies (${screens.length} écrans + ${expectations.length} contrôles de langue) ===\n`);
 if (failures.length > 0) {
   process.stdout.write(`\nÉchecs :\n${failures.map((failure) => `  ✘ ${failure}`).join('\n')}\n`);
   process.exitCode = 1;

@@ -21,17 +21,18 @@ npm test                 # exécution unique
 npm run test:watch       # en continu pendant le développement
 ```
 
-**138 vérifications** réparties en sept suites, sans base de données ni réseau :
+**159 vérifications** réparties en huit suites, sans base de données ni réseau :
 
 | Suite | Ce qui est prouvé |
 | --- | --- |
 | `shared/test/levels.test.ts` (10) | Ordre des niveaux de gravité et de certitude, `worstSafety`, `weakestCertainty` (liste vide → NON DISPONIBLE), `capCertainty` qui ne peut que réduire |
+| `shared/test/i18n.test.ts` (19) | Multilingue honnête : trois langues déclarées, catalogue wolof cohérent (clé, français, anglais, relecteur), **aucune consigne de sécurité non relue n'est affichée en wolof**, rapport de langue exact, et repli annoncé quand une réponse n'est pas dans la langue demandée |
 | `obd/test/protocols.test.ts` (25) | Codage/décodage aller-retour des codes défaut, trames ELM327, PID non disponibles, masques de PID supportés, déterminisme et étiquetage du simulateur |
 | `obd/test/bluetooth.test.ts` (32) | Transport Bluetooth SPP/BLE sur un faux pont ELM327 : écho, marqueur `>`, réponses fragmentées, délais, liaison fermée, commande remplacée. Et l'honnêteté : sans pilote, **aucune liste d'appareils** ; un nom d'adaptateur n'est que « probable » ; un boîtier muet ne produit aucun scan |
 | `diagnostic/test/engine.test.ts` (15) | Contexte vide → NON DISPONIBLE, aucune hypothèse « confirmée » sans test, déterminisme, sécurité qui ne s'adoucit jamais, traçabilité |
 | `diagnostic/test/knowledge.test.ts` (19) | Chaque code et chaque test porte ses sources, ses deux langues et un test applicable ; un code inconnu n'est jamais inventé |
 | `diagnostic/test/procedures.test.ts` (16) | Après réparation : défaut résolu / toujours présent / **nouveau défaut** / données insuffisantes ; second avis : aucun jugement sur le professionnel ; inspection avant achat : les déclarations du vendeur ne sont pas des preuves |
-| `ai/test/anti-hallucination.test.ts` (20) | Le RAG ne renvoie que des documents sourcés ; un code inventé, une valeur inventée, une spécification constructeur ou une garantie de sécurité sont **rejetés** ; un LLM qui délire est remplacé par la réponse du moteur |
+| `ai/test/anti-hallucination.test.ts` (23) | Le RAG ne renvoie que des documents sourcés ; un code inventé, une valeur inventée, une spécification constructeur ou une garantie de sécurité sont **rejetés** ; un LLM qui délire est remplacé par la réponse du moteur ; une question en wolof reçoit une réponse en français **signalée comme telle**, sans mot wolof inventé |
 
 Les fixtures (`diagnostic/test/fixtures.ts`) construisent les mesures à partir du
 dictionnaire de PID réel : un test ne peut pas inventer une unité ou une borne.
@@ -69,12 +70,13 @@ inexistantes.
 npm run test:e2e
 ```
 
-37 vérifications, sur une base neuve :
+39 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
 | 1–3 | Amorçage de la base | Base de connaissances, référentiels, mode démonstration |
 | 3 bis | Bluetooth | État réel annoncé (`available`, explication) et **aucun appareil inventé** sans pilote |
+| 3 ter | Multilingue | Une question posée en wolof reçoit une réponse signalée « rédigée en français », avec la raison ; le wolof est accepté par l'API au lieu d'être rejeté |
 | 4–5 | Connexion et véhicules | Le compte de démonstration fonctionne |
 | 6–13 | Scan simulé | Scan, bandeau MODE SIMULATION, certitude, sécurité, « Puis-je rouler ? », PID non supportés, hypothèses, tests, **aucune hypothèse « confirmée » sans test** |
 | 14 | Effacement sans confirmation | HTTP 400 : on ne modifie pas un véhicule sans accord |
@@ -86,6 +88,7 @@ npm run test:e2e
 | 31 | Synchronisation hors ligne | Idempotence (`duplicates`) |
 | 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
 | 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
+| 33 bis | Multilingue | Question en wolof → `language.effective = 'fr'`, `fallback: true`, explication présente ; aucune erreur de saisie |
 | 34–35 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |
 
 Le test volontairement « méchant » est le n° 27 : un code défaut inexistant dans la
@@ -101,6 +104,20 @@ npx tsx tests/web-smoke.tsx
 Rend les 16 écrans sans navigateur, dans le cas le plus défavorable : aucun véhicule,
 aucune donnée chargée, aucune interaction. Objectif : garantir qu'un écran ne plante
 jamais au premier affichage (imports, contextes, accès à des données absentes).
+
+Six contrôles supplémentaires activent la langue wolof et vérifient ce que
+l'utilisateur verrait réellement :
+
+| Contrôle | Ce qui est prouvé |
+| --- | --- |
+| Langue active | Le wolof enregistré est bien pris en compte (et non silencieusement ramené au français) |
+| Libellé du catalogue | « Accueil » devient `Kër gi` : le catalogue partagé alimente l'interface |
+| Bandeau | La mention de relecture en cours est affichée avec les compteurs réels |
+| Consigne de sécurité | 🔴 CRITIQUE reste en français : aucun mot wolof approximatif sur la sécurité |
+| Libellé non critique | ⚪ AMUL s'affiche bien en wolof (le repli n'est pas généralisé) |
+| Cohérence des replis | `labelText()` renvoie le français pour la sécurité et le wolof pour les libellés relus |
+
+Total : **22/22 vérifications**.
 
 ## 5. Construction de l'application
 
@@ -131,6 +148,9 @@ curl -s localhost:3000/api/health
 
 - Tests unitaires par règle (`diagnostic/src/rules/*`) pris isolément, en plus des
   scénarios de bout en bout du moteur déjà couverts.
+- Relecture du wolof par un locuteur natif : tant qu'elle n'a pas eu lieu, les
+  consignes de sécurité restent en français et les tests le vérifient. Voir
+  `docs/12-multilingue.md`.
 - Tests de charge sur `/api/scans` (le scan est l'opération la plus coûteuse).
 - Tests d'accessibilité et de lisibilité en plein soleil (contraste, taille de police).
 - Vérification sur un adaptateur ELM327 réel, avec deux boîtiers différents.

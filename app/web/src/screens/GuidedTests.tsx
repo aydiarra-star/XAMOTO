@@ -92,7 +92,7 @@ export default function GuidedTestsScreen(): JSX.Element {
 
       {tests.map((test) => {
         const isOpen = openTest === test.testKey;
-        const safety = labelOf(SAFETY_LABELS, test.safety, { fr: 'normal', en: 'normal', icon: '🟢', color: '#22c55e' });
+        const safety = labelOf(SAFETY_LABELS, test.safety, { fr: 'NORMAL', en: 'NORMAL', wo: '', icon: '🟢', color: '#22c55e' });
         return (
           <Card key={test.id}>
             <div className="row between">
@@ -123,7 +123,7 @@ export default function GuidedTestsScreen(): JSX.Element {
 
             {test.result && (
               <Notice tone={test.result.outcome === 'ok' ? 'ok' : 'warn'}>
-                <strong>{pickLabel(OUTCOME_LABELS, test.result.outcome, locale, { fr: test.result.outcome, en: test.result.outcome })}</strong>
+                <strong>{pickLabel(OUTCOME_LABELS, test.result.outcome, locale, { fr: test.result.outcome, en: test.result.outcome, wo: '' })}</strong>
                 {test.result.measuredValue !== null ? ` — ${test.result.measuredValue} ${test.result.unit ?? ''}` : ''}
                 {test.result.note ? <div className="small">{test.result.note}</div> : null}
                 <small>
@@ -153,7 +153,7 @@ export default function GuidedTestsScreen(): JSX.Element {
                     <select id={`outcome-${test.testKey}`} value={form.outcome} onChange={(event) => setForm({ ...form, outcome: event.target.value as TestOutcome })}>
                       {Object.keys(OUTCOME_LABELS).map((key) => (
                         <option key={key} value={key}>
-                          {pickLabel(OUTCOME_LABELS, key, locale, { fr: key, en: key })}
+                          {pickLabel(OUTCOME_LABELS, key, locale, { fr: key, en: key, wo: '' })}
                         </option>
                       ))}
                     </select>

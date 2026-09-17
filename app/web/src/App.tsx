@@ -1,7 +1,7 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth';
 import { useVehicles } from './vehicle-context';
-import { useI18n } from './i18n';
+import { LOCALE_LABELS, useI18n } from './i18n';
 import { Spinner } from './components';
 import LoginScreen from './screens/Login';
 import HomeScreen from './screens/Home';
@@ -23,7 +23,7 @@ import AlertsScreen from './screens/Alerts';
 export default function App(): JSX.Element {
   const { user, loading, logout } = useAuth();
   const { vehicles, vehicle, select } = useVehicles();
-  const { locale, setLocale, t } = useI18n();
+  const { locale, setLocale, t, wolof } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -45,7 +45,17 @@ export default function App(): JSX.Element {
   }
 
   return (
-    <div className="app">
+    <div className="app-outer">
+      {/*
+        Transparence linguistique (§40, §41) : en wolof, XAMOTO dit exactement
+        ce qui est traduit et ce qui ne l'est pas. Aucun texte n'est inventé.
+      */}
+      {locale === 'wo' && (
+        <div className="notice warn" style={{ margin: 0 }}>
+          {wolof.noticeFr}
+        </div>
+      )}
+      <div className="app">
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark">X</span>
@@ -79,8 +89,13 @@ export default function App(): JSX.Element {
           {user.plan === 'premium' ? t('Compte premium', 'Premium account') : t('Compte gratuit', 'Free account')}
         </div>
         <div className="row">
-          <button className="button small ghost" onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}>
-            {locale === 'fr' ? 'English' : 'Français'}
+          {/* Trois langues, dans l'ordre : français (référence), anglais, wolof. */}
+          <button
+            className="button small ghost"
+            onClick={() => setLocale(locale === 'fr' ? 'en' : locale === 'en' ? 'wo' : 'fr')}
+            title={LOCALE_LABELS[locale]}
+          >
+            {locale === 'fr' ? 'English' : locale === 'en' ? 'Wolof' : 'Français'}
           </button>
           <button className="button small ghost" onClick={() => void logout().then(() => navigate('/login'))}>
             {t('Quitter', 'Sign out')}
@@ -133,6 +148,7 @@ export default function App(): JSX.Element {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+      </div>
       </div>
     </div>
   );
