@@ -155,8 +155,12 @@ describe('trames ELM327 (couche isolée, §7)', () => {
 });
 
 describe('simulateur (§30, §31)', () => {
-  it('propose huit scénarios documentés', () => {
-    expect(SCENARIOS).toHaveLength(8);
+  it('propose neuf scénarios documentés, dont un système non couvert par les mesures OBD', () => {
+    expect(SCENARIOS).toHaveLength(9);
+    // Le scénario de freinage existe pour prouver l'inverse d'une promesse :
+    // l'OBD donne un code de châssis, mais aucune mesure de roue.
+    const abs = SCENARIO_BY_ID.get('abs_fault');
+    expect(abs?.dtcs.every((dtc) => dtc.code.startsWith('C'))).toBe(true);
     for (const scenario of SCENARIOS) {
       expect(scenario.labelFr.length).toBeGreaterThan(5);
       expect(scenario.labelEn.length).toBeGreaterThan(3);

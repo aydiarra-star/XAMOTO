@@ -72,7 +72,7 @@ inexistantes.
 npm run test:e2e
 ```
 
-42 vérifications, sur une base neuve :
+45 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
@@ -91,6 +91,7 @@ npm run test:e2e
 | 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
 | 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
 | 33 bis | Multilingue | Question en wolof → `language.effective = 'fr'`, `fallback: true`, explication présente ; aucune erreur de saisie |
+| 33 quinquies | Freinage : un code de châssis n'est pas une pièce | Le scénario `abs_fault` produit bien un code C ; XAMOTO affiche que le code désigne un **circuit** ; aucune hypothèse n'est « confirmée » sur un système que l'OBD ne lit pas |
 | 33 quater | Couverture par système | Les quinze systèmes sont exposés avec leurs limites ; l'airbag est annoncé `not_accessible`, jamais « sain » ; règles dédiées et générales distinguées |
 | 34–35 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |
 

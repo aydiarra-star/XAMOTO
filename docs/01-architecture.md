@@ -102,7 +102,7 @@ XAMOTO/
 ├─ obd/
 │  ├─ src/protocols/           # J1979 (PIDs), SAE J2012 (codes), ELM327
 │  ├─ src/adapters/            # ELM327, simulateur, transports
-│  └─ src/simulator/           # 8 scénarios, tous étiquetés MODE SIMULATION
+│  └─ src/simulator/           # 9 scénarios, tous étiquetés MODE SIMULATION
 ├─ ai/
 │  ├─ src/rag/                 # corpus documentaire + recherche BM25
 │  ├─ src/assistant/           # contexte, réponses déterministes, LLM encadré

@@ -19,7 +19,8 @@ export type SimulationScenarioId =
   | 'multiple_dtc'
   | 'intermittent_fault'
   | 'no_start'
-  | 'diesel_egr_dpf';
+  | 'diesel_egr_dpf'
+  | 'abs_fault';
 
 export interface ScenarioDtcSpec {
   code: string;
@@ -175,6 +176,28 @@ export const SCENARIOS: SimulationScenario[] = [
     ],
     unsupportedPids: ['o2_b1s2_voltage', 'fuel_pressure'],
     demoVehicle: { brand: 'Peugeot', model: 'Partner', year: 2014, engine: '1.6 HDi', fuelType: 'diesel', plate: 'DK-3388-MN' },
+  },
+  {
+    /*
+     * Scénario de freinage : le véhicule roule, le moteur est sain, mais un code
+     * de châssis est présent. C'est le cas typique où un outil générique annonce
+     * « capteur à remplacer » — XAMOTO, lui, impose l'ordre de vérification et
+     * plafonne la certitude, parce que l'OBD ne donne AUCUNE mesure de roue.
+     */
+    id: 'abs_fault',
+    labelFr: 'Freinage — code de châssis (ABS)',
+    labelEn: 'Braking — chassis code (ABS)',
+    descriptionFr:
+      'Véhicule qui roule normalement mais avec un voyant ABS : code C0035 côté roue avant gauche. Aucune mesure de vitesse de roue n’est disponible par l’OBD : XAMOTO devra le dire.',
+    descriptionEn:
+      'Vehicle driving normally but with the ABS light on: code C0035 at the front-left wheel. No wheel-speed measurement is available over OBD: XAMOTO must say so.',
+    defaultSymptoms: ['brake_soft_pedal'],
+    dtcs: [
+      { code: 'C0035', status: 'active', appearsAtSeconds: 0, occurrences: 7 },
+      { code: 'C0040', status: 'stored', appearsAtSeconds: 30, occurrences: 2 },
+    ],
+    unsupportedPids: ['oil_temp', 'dpf_pressure_delta', 'egr_command'],
+    demoVehicle: { brand: 'Hyundai', model: 'Accent', year: 2015, engine: '1.4 MPI', fuelType: 'essence', plate: 'DK-5522-QR' },
   },
 ];
 

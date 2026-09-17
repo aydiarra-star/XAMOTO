@@ -73,7 +73,7 @@ Deux interdits structurants :
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
 | Tests unitaires | `npm test` | 181/181 |
-| Bout en bout API | `npm run test:e2e` | 42/42 |
+| Bout en bout API | `npm run test:e2e` | 45/45 |
 | Rendu des écrans | `npm run test:screens` | 22/22 (16 écrans + 6 contrôles de langue) |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
 

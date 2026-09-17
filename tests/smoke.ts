@@ -138,6 +138,33 @@ async function main(): Promise<void> {
     `${coverageList[0]?.genericRuleCount ?? 0} règles générales`,
   );
 
+  /* ── 3 quinquies. Freinage : un code de châssis ne désigne pas une pièce ── */
+  const absScan = await app.inject({
+    method: 'POST',
+    url: '/api/scans',
+    headers: auth,
+    payload: { vehicleId: firstVehicle?.id, mode: 'simulator', scenario: 'abs_fault', samples: 4 },
+  });
+  const absBody = absScan.json();
+  const absDiagnostic = absBody.diagnostic ?? {};
+  const absFindings: Array<{ titleFr?: string; certainty?: string }> = absDiagnostic.findings ?? [];
+  const absHypotheses: Array<{ labelFr?: string; certainty?: string }> = absDiagnostic.hypotheses ?? [];
+  check(
+    'Scénario de freinage disponible (code de châssis sans mesure de roue)',
+    absScan.statusCode === 201 && (absBody.dtcs ?? []).some((dtc: { code: string }) => dtc.code.startsWith('C')),
+    (absBody.dtcs ?? []).map((dtc: { code: string }) => dtc.code).join(', '),
+  );
+  check(
+    'Freinage : XAMOTO rappelle que le code désigne un circuit, pas une pièce',
+    absFindings.some((finding) => (finding.titleFr ?? '').includes('circuit')),
+    absFindings.map((finding) => finding.titleFr).filter(Boolean).slice(0, 3).join(' | '),
+  );
+  check(
+    'Freinage : aucune hypothèse « confirmée » sur un système non lisible',
+    absHypotheses.length > 0 && absHypotheses.every((hypothesis) => hypothesis.certainty !== 'confirmed'),
+    absHypotheses.map((hypothesis) => hypothesis.certainty).join(', ') || 'aucune hypothèse',
+  );
+
   /* ── 4. Moteur : au moins une hypothèse et un test ───────────────────── */
   const hypotheses = scanBody.diagnostic?.hypotheses as Array<{ labelFr: string; certainty: string }> | undefined;
   const tests = scanBody.diagnostic?.tests as Array<{ testKey: string }> | undefined;

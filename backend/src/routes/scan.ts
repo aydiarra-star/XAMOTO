@@ -21,8 +21,13 @@ import {
   bluetoothAvailability,
   listBluetoothDevices,
 } from '@xamoto/obd';
+import type { SimulationScenarioId } from '@xamoto/obd';
 
-const SCENARIO_IDS = ['normal_engine', 'weak_battery', 'high_temperature', 'engine_fault', 'multiple_dtc', 'intermittent_fault', 'no_start', 'diesel_egr_dpf'] as const;
+/**
+ * Les identifiants de scénarios viennent du simulateur lui-même : une liste
+ * recopiée ici finirait par diverger et refuser un scénario qui existe.
+ */
+const SCENARIO_IDS = SCENARIOS.map((scenario) => scenario.id) as [string, ...string[]];
 
 const scanSchema = z.object({
   vehicleId: z.string(),
@@ -150,7 +155,7 @@ export async function scanRoutes(app: FastifyInstance): Promise<void> {
         userId: user.id,
         vehicleId: parsed.data.vehicleId,
         mode: parsed.data.mode,
-        scenario: parsed.data.scenario,
+        scenario: parsed.data.scenario as SimulationScenarioId | undefined,
         host: parsed.data.host,
         port: parsed.data.port,
         samples: parsed.data.samples,

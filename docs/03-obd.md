@@ -108,7 +108,7 @@ liste vide et l'explication — le test de bout en bout le vérifie.
 
 ## 6. Simulateur (§30)
 
-`obd/src/simulator/scenarios.ts` contient 8 scénarios :
+`obd/src/simulator/scenarios.ts` contient 9 scénarios :
 
 | Identifiant | Situation simulée |
 | --- | --- |
@@ -120,6 +120,7 @@ liste vide et l'explication — le test de bout en bout le vérifie.
 | `intermittent_fault` | Défaut intermittent, revenu après effacement |
 | `no_start` | Véhicule qui ne démarre pas |
 | `diesel_egr_dpf` | EGR / FAP sur moteur diesel |
+| `abs_fault` | Freinage : code de châssis C0035/C0040, **aucune mesure de roue disponible** |
 
 Le simulateur est un **outil de démonstration et de test**, pas une source de vérité :
 
