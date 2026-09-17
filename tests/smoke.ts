@@ -74,6 +74,25 @@ async function main(): Promise<void> {
   check('« Puis-je rouler ? » fourni', Boolean(scanBody.diagnostic?.canIDrive?.headlineFr), String(scanBody.diagnostic?.canIDrive?.level));
   check('Données non supportées listées', Array.isArray(scanBody.unsupportedPids), `${scanBody.unsupportedPids?.length ?? 0} PID non supportés`);
 
+  /* ── 3 bis. Bluetooth : XAMOTO annonce ce qu'il peut faire, rien de plus ── */
+  const candidates = await app.inject({ method: 'GET', url: '/api/obd/candidates', headers: auth });
+  const candidatesBody = candidates.json();
+  check(
+    'État Bluetooth annoncé honnêtement',
+    candidates.statusCode === 200 && typeof candidatesBody.bluetooth?.available === 'boolean' && typeof candidatesBody.bluetooth?.noticeFr === 'string',
+    `disponible : ${String(candidatesBody.bluetooth?.available)} — ${candidatesBody.bluetooth?.noticeFr ?? ''}`,
+  );
+  const bluetooth = await app.inject({ method: 'GET', url: '/api/obd/bluetooth/devices', headers: auth });
+  const bluetoothBody = bluetooth.json();
+  const bluetoothHonest =
+    bluetooth.statusCode === 200 &&
+    Array.isArray(bluetoothBody.devices) &&
+    // Soit un pilote existe et la liste est réelle, soit il n'existe pas et elle
+    // est vide AVEC une explication. Jamais une liste inventée sans pilote.
+    (bluetoothBody.available ? bluetoothBody.devices.length >= 0 : bluetoothBody.devices.length === 0 && typeof bluetoothBody.hintFr === 'string') &&
+    bluetoothBody.certainty === 'presumption';
+  check('Aucun appareil Bluetooth inventé sans pilote', bluetoothHonest, `disponible : ${String(bluetoothBody.available)}, appareils : ${bluetoothBody.devices?.length ?? 0}`);
+
   /* ── 4. Moteur : au moins une hypothèse et un test ───────────────────── */
   const hypotheses = scanBody.diagnostic?.hypotheses as Array<{ labelFr: string; certainty: string }> | undefined;
   const tests = scanBody.diagnostic?.tests as Array<{ testKey: string }> | undefined;

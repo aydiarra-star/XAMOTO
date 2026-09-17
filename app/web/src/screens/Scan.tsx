@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, ApiError, type ApiScenario, type ApiScanResult, type ApiSymptom } from '../api';
+import { api, ApiError, type ApiObdCandidates, type ApiBluetoothDevices, type ApiScenario, type ApiScanResult, type ApiSymptom } from '../api';
 import { useVehicles } from '../vehicle-context';
 import { useI18n } from '../i18n';
 import { useAction, useAsync, formatDateTime } from '../hooks';
@@ -32,7 +32,10 @@ export default function ScanScreen(): JSX.Element {
 
   const scenarios = useAsync(() => api.get<{ scenarios: ApiScenario[]; notice: string }>('/api/obd/simulator/scenarios'), []);
   const symptomList = useAsync(() => api.get<{ symptoms: ApiSymptom[] }>('/api/knowledge/symptoms'), []);
-  const candidates = useAsync(() => api.get<{ hosts: string[]; ports: number[]; notice: string; bluetooth: Record<string, unknown> }>('/api/obd/candidates'), []);
+  const candidates = useAsync(() => api.get<ApiObdCandidates>('/api/obd/candidates'), []);
+  const bluetoothDevices = useAction(async () =>
+    api.get<ApiBluetoothDevices>('/api/obd/bluetooth/devices'),
+  );
 
   const probe = useAction(async (address: { host: string; port: number }) =>
     api.post<{ reachable: boolean; device?: unknown; error?: string; hint?: string }>('/api/obd/probe', address),
@@ -133,6 +136,105 @@ export default function ScanScreen(): JSX.Element {
             {probe.data && !probe.data.reachable && <Notice tone="danger">{probe.data.error} {probe.data.hint}</Notice>}
             <ErrorBox message={candidates.data?.notice === undefined ? candidates.error : null} />
             <p className="small muted">{candidates.data?.notice}</p>
+
+            <div style={{ marginTop: 14, borderTop: '1px solid var(--line, #2a2a2a)', paddingTop: 10 }}>
+              <h3 style={{ marginBottom: 4 }}>{t('Bluetooth (adaptateurs SPP et BLE)', 'Bluetooth (SPP and BLE adapters)')}</h3>
+              {candidates.data ? (
+                <p className="small muted">
+                  {locale === 'en' ? candidates.data.bluetooth.noticeEn : candidates.data.bluetooth.noticeFr}
+                </p>
+              ) : null}
+              {candidates.data && !candidates.data.bluetooth.available && (
+                <Notice tone="warn">
+                  {locale === 'en' ? candidates.data.bluetooth.hintEn : candidates.data.bluetooth.hintFr}
+                </Notice>
+              )}
+              {candidates.data?.bluetooth.drivers.length ? (
+                <p className="small muted">
+                  {t('Pilotes détectés', 'Detected drivers')} :{' '}
+                  {candidates.data.bluetooth.drivers
+                    .map((driver) => `${driver.label} (${driver.kinds.join('/')}${driver.available ? '' : ` — ${t('indisponible', 'unavailable')}`})`)
+                    .join(' · ')}
+                </p>
+              ) : null}
+
+              <div className="row" style={{ marginTop: 8 }}>
+                <button
+                  className="button small"
+                  disabled={bluetoothDevices.loading || !candidates.data?.bluetooth.available}
+                  onClick={() => void bluetoothDevices.run()}
+                >
+                  {t('Chercher les appareils Bluetooth', 'Look for Bluetooth devices')}
+                </button>
+              </div>
+
+              <ErrorBox message={bluetoothDevices.error} />
+
+              {bluetoothDevices.data && !bluetoothDevices.data.available && (
+                <Notice tone="warn">
+                  {locale === 'en' ? bluetoothDevices.data.hintEn : bluetoothDevices.data.hintFr}
+                </Notice>
+              )}
+
+              {bluetoothDevices.data?.available && (
+                <>
+                  <p className="hint">{locale === 'en' ? bluetoothDevices.data.certaintyEn : bluetoothDevices.data.certaintyFr}</p>
+                  {bluetoothDevices.data.devices.length === 0 ? (
+                    <p className="small muted">
+                      {t(
+                        'Aucun appareil Bluetooth trouvé. Vérifiez qu’il est allumé et appairé.',
+                        'No Bluetooth device found. Check that it is powered on and paired.',
+                      )}
+                    </p>
+                  ) : (
+                    <div className="table-wrap">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>{t('Appareil', 'Device')}</th>
+                            <th>{t('Liaison', 'Link')}</th>
+                            <th>{t('Signal', 'Signal')}</th>
+                            <th>{t('Adaptateur OBD ?', 'OBD adapter?')}</th>
+                            <th />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bluetoothDevices.data.devices.map((device) => (
+                            <tr key={device.address}>
+                              <td>
+                                {device.name}
+                                <div className="small muted mono">{device.address}</div>
+                              </td>
+                              <td className="small">{device.kind === 'ble' ? 'BLE' : 'SPP'}</td>
+                              <td className="small">{device.rssi === null ? '—' : `${device.rssi} dBm`}</td>
+                              <td className="small">
+                                {device.likelyObdAdapter ? (
+                                  <span className="badge outline">{t('probable', 'likely')}</span>
+                                ) : (
+                                  <span className="small muted">{t('non reconnu', 'not recognised')}</span>
+                                )}
+                                <div className="small muted">{locale === 'en' ? device.reasonEn : device.reasonFr}</div>
+                              </td>
+                              <td>
+                                <a className="button small" href={`#bluetooth-${device.address}`} onClick={() => setHost(device.address)}>
+                                  {t('Utiliser cette adresse', 'Use this address')}
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  <p className="small muted">
+                    {t(
+                      'Les appareils Bluetooth sont pris en charge par l’application mobile ; depuis le navigateur, la lecture OBD passe par le Wi-Fi. Cette liste sert à identifier le boîtier avant d’utiliser l’application.',
+                      'Bluetooth devices are supported by the mobile app; from the browser, OBD reading goes through Wi-Fi. This list helps identify the adapter before using the app.',
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
           </>
         )}
       </Card>

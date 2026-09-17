@@ -328,8 +328,8 @@ adapterRegistry.register('elm327', () => {
   throw new Error('Elm327Adapter nécessite un transport : utilisez new Elm327Adapter({ transport }).');
 });
 adapterRegistry.register('bluetooth-spp', () => {
-  throw new Error('Transport Bluetooth SPP à fournir (application mobile Flutter / Web Bluetooth).');
+  throw new Error('Transport Bluetooth SPP à fournir : new BluetoothTransport({ address, kind: \'spp\' }).');
 });
 adapterRegistry.register('ble', () => {
-  throw new Error('Transport Bluetooth Low Energy à fournir (application mobile Flutter / Web Bluetooth).');
+  throw new Error('Transport Bluetooth BLE à fournir : new BluetoothTransport({ address, kind: \'ble\' }).');
 });

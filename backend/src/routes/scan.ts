@@ -12,7 +12,15 @@ import { z } from 'zod';
 import { all, get, jsonParse, type Row } from '../db/index.js';
 import { assertVehicleAccess, authenticate, type AuthUser } from '../auth/index.js';
 import { runScan } from '../services/scanService.js';
-import { COMMON_ELM327_HOSTS, COMMON_ELM327_PORTS, SCENARIOS, TcpTransport, Elm327Adapter } from '@xamoto/obd';
+import {
+  COMMON_ELM327_HOSTS,
+  COMMON_ELM327_PORTS,
+  SCENARIOS,
+  TcpTransport,
+  Elm327Adapter,
+  bluetoothAvailability,
+  listBluetoothDevices,
+} from '@xamoto/obd';
 
 const SCENARIO_IDS = ['normal_engine', 'weak_battery', 'high_temperature', 'engine_fault', 'multiple_dtc', 'intermittent_fault', 'no_start', 'diesel_egr_dpf'] as const;
 
@@ -41,12 +49,56 @@ export async function scanRoutes(app: FastifyInstance): Promise<void> {
 
   /** Découverte des adaptateurs Wi-Fi usuels (utile avant un scan réel). */
   app.get('/api/obd/candidates', async (_request, reply) => {
+    const bluetooth = bluetoothAvailability();
     return reply.send({
       hosts: COMMON_ELM327_HOSTS,
       ports: COMMON_ELM327_PORTS,
       notice:
-        'XAMOTO teste la présence d’un adaptateur ELM327 compatible (Wi-Fi). Les adaptateurs Bluetooth nécessitent l’application mobile (Bluetooth SPP / BLE).',
-      bluetooth: { supportedInBrowser: 'web-bluetooth (selon navigateur)', supportedInMobileApp: true },
+        'XAMOTO teste la présence d’un adaptateur ELM327 compatible (Wi-Fi). Le Bluetooth dépend de la plateforme : XAMOTO annonce ce qu’il peut réellement faire au lieu de le supposer.',
+      bluetooth: {
+        available: bluetooth.available,
+        drivers: bluetooth.drivers,
+        noticeFr: bluetooth.noticeFr,
+        noticeEn: bluetooth.noticeEn,
+        hintFr: bluetooth.hintFr ?? null,
+        hintEn: bluetooth.hintEn ?? null,
+      },
+    });
+  });
+
+  /**
+   * Appareils Bluetooth proposés par un pilote de plateforme (§7, §29).
+   * Sans pilote enregistré, XAMOTO renvoie une liste vide en expliquant
+   * pourquoi : il n’existe aucun chemin de code produisant une liste inventée.
+   */
+  app.get('/api/obd/bluetooth/devices', async (request, reply) => {
+    const query = z.object({ kind: z.enum(['spp', 'ble']).optional() }).safeParse(request.query);
+    if (!query.success) return reply.code(400).send({ error: { code: 'invalid_input', message: 'Type de liaison invalide.' } });
+    const status = bluetoothAvailability();
+    const devices = await listBluetoothDevices({ kind: query.data.kind });
+    // §47 : la disponibilité est un FAIT observé, la compatibilité une présomption.
+    return reply.send({
+      available: status.available,
+      devices: devices.map((device) => ({
+        address: device.address,
+        name: device.name,
+        kind: device.kind,
+        paired: device.paired,
+        rssi: device.rssi ?? null,
+        likelyObdAdapter: device.likelyObdAdapter,
+        reasonFr: device.reasonFr,
+        reasonEn: device.reasonEn,
+      })),
+      drivers: status.drivers,
+      noticeFr: status.noticeFr,
+      noticeEn: status.noticeEn,
+      hintFr: status.hintFr ?? null,
+      hintEn: status.hintEn ?? null,
+      certainty: 'presumption' as const,
+      certaintyFr:
+        'Un appareil signalé « probable » n’est pas un adaptateur confirmé : il faudra une liaison réelle (ATZ / ATI) pour le savoir. XAMOTO n’affirme rien avant.',
+      certaintyEn:
+        'A device marked "likely" is not a confirmed adapter: a real link (ATZ / ATI) is needed to know. XAMOTO asserts nothing before that.',
     });
   });
 

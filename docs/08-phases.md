@@ -72,10 +72,15 @@ Deux interdits structurants :
 | --- | --- | --- |
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
-| Tests unitaires | `npm test` | 105/105 |
-| Bout en bout API | `npm run test:e2e` | 35/35 |
+| Tests unitaires | `npm test` | 138/138 |
+| Bout en bout API | `npm run test:e2e` | 37/37 |
 | Rendu des écrans | `npm run test:screens` | 16/16 |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+La **phase 3** a apporté la couche Bluetooth SPP/BLE
+(`obd/src/adapters/bluetoothTransport.ts`) : transport fondé sur des pilotes de
+plateforme, reconnaissance prudente des adaptateurs, et refus explicite de produire
+une liste d'appareils ou une compatibilité inventée.
 
 Après la phase 1 (MVP), la phase 2 a été consacrée à la solidité des couches
 sensibles : tests unitaires du codec de codes défaut, du moteur de diagnostic, de la
@@ -87,8 +92,9 @@ lu sur un véhicule et la base de connaissances (détail :
 
 ## 6. Ce qui reste à faire après cette phase
 
-- Application mobile Flutter (`app/mobile`).
-- Transport Bluetooth (`obd/src/adapters/bluetoothTransport.ts`).
+- Application mobile Flutter (`app/mobile`) : elle apporte les pilotes Bluetooth
+  SPP/BLE que la plateforme web ne peut pas fournir (la couche de transport, elle,
+  est prête et testée).
 - Enrichissement de la base documentaire (chaque ajout exige une source).
 - Traductions wolof relues par un locuteur natif (jamais de traduction automatique
   présentée comme fiable).

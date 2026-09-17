@@ -31,26 +31,49 @@ Flutter (app/mobile)
         API XAMOTO (backend/) — moteur inchangé
 ```
 
-## Contrat d'adaptateur à respecter
+## Pilote Bluetooth à fournir (contrat)
 
-L'application mobile devra fournir un transport conforme à `obd/src/adapters/types.ts` :
+La couche Bluetooth côté serveur/moteur est **déjà écrite et testée**
+(`obd/src/adapters/bluetoothTransport.ts`, voir `docs/03-obd.md` § 5). Ce qui manque
+au navigateur, c'est le matériel : seul le natif peut ouvrir une liaison Bluetooth.
+L'application mobile n'a donc qu'**un seul objet** à fournir, exactement calqué sur
+`BluetoothDriver` :
 
 ```dart
-abstract class ObdTransport {
-  Future<void> open();
-  Future<void> write(String command);
-  Future<String> readUntilTimeout({Duration timeout});
+abstract class BluetoothDriver {
+  String get id;
+  String get label;
+  List<String> get kinds;                 // ['spp', 'ble']
+  bool available();
+  Future<List<BluetoothDeviceInfo>> list();          // nom, adresse, appairé, services
+  Future<BluetoothLink> open(String address, {String kind});
+}
+
+abstract class BluetoothLink {
+  Future<void> write(String data);                   // commande ELM327 + ''
+  void onData(void Function(String chunk) handler);  // octets reçus, par morceaux
   Future<void> close();
+  bool isOpen();
 }
 ```
 
-Une fois ce transport disponible, les protocoles (ELM327, J1979, J2012) et tout le
-moteur de diagnostic s'appliquent **sans modification** : c'est exactement l'objet du
-découplage imposé par le §7.
+C'est le seul travail proprement mobile : le transport assemble ensuite lui-même les
+fragments, retire l'écho, attend le marqueur `>` et applique le délai. Les protocoles
+(ELM327, J1979, J2012) et tout le moteur de diagnostic s'appliquent **sans
+modification** : c'est exactement l'objet du découplage imposé par le §7.
+
+Deux règles héritées de la couche déjà écrite, à ne pas contourner :
+
+- si un pilote n'est pas disponible, `list()` doit lever ou renvoyer une liste vide —
+  **jamais** une liste d'appareils inventée ;
+- un appareil dont le nom ressemble à un adaptateur OBD reste `likelyObdAdapter`
+  (présomption) jusqu'à ce que `ATZ` / `ATI` répondent.
 
 ## Prérequis avant de commencer
 
-1. La PWA V1 est validée (tests `35/35` et `16/16`).
+1. La couche Bluetooth serveur est validée (`obd/test/bluetooth.test.ts`, 32 tests) et
+   la PWA reste verte (`npm test`, `npm run test:e2e` → 37/37, `npm run test:screens`
+   → 16/16).
 2. L'API est stable et versionnée.
 3. Le modèle de synchronisation hors ligne est éprouvé sur la PWA.
 4. Un boîtier Bluetooth de référence a été testé manuellement, avec deux véhicules

@@ -21,12 +21,13 @@ npm test                 # exécution unique
 npm run test:watch       # en continu pendant le développement
 ```
 
-**105 vérifications** réparties en six suites, sans base de données ni réseau :
+**138 vérifications** réparties en sept suites, sans base de données ni réseau :
 
 | Suite | Ce qui est prouvé |
 | --- | --- |
 | `shared/test/levels.test.ts` (10) | Ordre des niveaux de gravité et de certitude, `worstSafety`, `weakestCertainty` (liste vide → NON DISPONIBLE), `capCertainty` qui ne peut que réduire |
 | `obd/test/protocols.test.ts` (25) | Codage/décodage aller-retour des codes défaut, trames ELM327, PID non disponibles, masques de PID supportés, déterminisme et étiquetage du simulateur |
+| `obd/test/bluetooth.test.ts` (32) | Transport Bluetooth SPP/BLE sur un faux pont ELM327 : écho, marqueur `>`, réponses fragmentées, délais, liaison fermée, commande remplacée. Et l'honnêteté : sans pilote, **aucune liste d'appareils** ; un nom d'adaptateur n'est que « probable » ; un boîtier muet ne produit aucun scan |
 | `diagnostic/test/engine.test.ts` (15) | Contexte vide → NON DISPONIBLE, aucune hypothèse « confirmée » sans test, déterminisme, sécurité qui ne s'adoucit jamais, traçabilité |
 | `diagnostic/test/knowledge.test.ts` (19) | Chaque code et chaque test porte ses sources, ses deux langues et un test applicable ; un code inconnu n'est jamais inventé |
 | `diagnostic/test/procedures.test.ts` (16) | Après réparation : défaut résolu / toujours présent / **nouveau défaut** / données insuffisantes ; second avis : aucun jugement sur le professionnel ; inspection avant achat : les déclarations du vendeur ne sont pas des preuves |
@@ -65,14 +66,15 @@ inexistantes.
 ## 3. Test de bout en bout de l'API (`tests/smoke.ts`)
 
 ```bash
-XAMOTO_DB_PATH=./data/smoke.sqlite NODE_ENV=test npx tsx tests/smoke.ts
+npm run test:e2e
 ```
 
-35 vérifications, sur une base neuve :
+37 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
 | 1–3 | Amorçage de la base | Base de connaissances, référentiels, mode démonstration |
+| 3 bis | Bluetooth | État réel annoncé (`available`, explication) et **aucun appareil inventé** sans pilote |
 | 4–5 | Connexion et véhicules | Le compte de démonstration fonctionne |
 | 6–13 | Scan simulé | Scan, bandeau MODE SIMULATION, certitude, sécurité, « Puis-je rouler ? », PID non supportés, hypothèses, tests, **aucune hypothèse « confirmée » sans test** |
 | 14 | Effacement sans confirmation | HTTP 400 : on ne modifie pas un véhicule sans accord |
@@ -82,7 +84,9 @@ XAMOTO_DB_PATH=./data/smoke.sqlite NODE_ENV=test npx tsx tests/smoke.ts
 | 25–27 | Assistant | Réponse tracée, refus hors sujet, **code non documenté → « Je ne dispose pas de cette donnée »** |
 | 28–30 | Garages | Annuaire, partage avec consentement (201), refus sans consentement (400) |
 | 31 | Synchronisation hors ligne | Idempotence (`duplicates`) |
-| 32–33 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |
+| 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
+| 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
+| 34–35 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |
 
 Le test volontairement « méchant » est le n° 27 : un code défaut inexistant dans la
 base (`P1234`) doit produire une phrase d'indisponibilité, jamais une explication

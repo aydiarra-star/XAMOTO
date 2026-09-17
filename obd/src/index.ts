@@ -25,6 +25,34 @@ export { SimulatorAdapter, SCENARIOS } from './adapters/simulatorAdapter.js';
 export { MemoryTransport, UnavailableTransport } from './adapters/memoryTransport.js';
 export { TcpTransport, COMMON_ELM327_HOSTS, COMMON_ELM327_PORTS } from './adapters/tcpTransport.js';
 export type { TcpTransportOptions } from './adapters/tcpTransport.js';
+export {
+  BluetoothTransport,
+  BluetoothUnavailableError,
+  BluetoothDeviceNotFoundError,
+  BluetoothLinkError,
+  BLUETOOTH_SPP_UUID,
+  COMMON_ELM327_BLE_SERVICES,
+  KNOWN_OBD_NAME_PATTERNS,
+  availableBluetoothDrivers,
+  bluetoothAvailability,
+  cleanResponse,
+  compareDevices,
+  createSerialBluetoothDriver,
+  describeBluetoothDevice,
+  listBluetoothDevices,
+  listBluetoothDrivers,
+  registerBluetoothDriver,
+  unregisterBluetoothDriver,
+} from './adapters/bluetoothTransport.js';
+export type {
+  BluetoothAvailability,
+  BluetoothDevice,
+  BluetoothDriver,
+  BluetoothLink,
+  BluetoothLinkKind,
+  BluetoothTransportOptions,
+  SerialPortLike,
+} from './adapters/bluetoothTransport.js';
 export { ObdSimulator, SCENARIO_BY_ID } from './simulator/scenarios.js';
 export type { SimulationScenario, SimulationScenarioId, SimulatedState, SimulationReading, ScenarioDtcSpec } from './simulator/scenarios.js';
 export { PID_DEFINITIONS, PID_BY_KEY, PID_BY_OBD, CORE_PID_KEYS, EXTENDED_PID_KEYS, isUnavailable } from './protocols/pids.js';

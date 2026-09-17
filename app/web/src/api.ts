@@ -389,6 +389,45 @@ export interface ApiScanDetail {
   provenance?: Record<string, unknown>;
 }
 
+/** Adaptateurs OBD proposés par le serveur (§7, §29). */
+export interface ApiObdCandidates {
+  hosts: string[];
+  ports: number[];
+  notice: string;
+  bluetooth: {
+    available: boolean;
+    drivers: Array<{ id: string; label: string; kinds: string[]; available: boolean }>;
+    noticeFr: string;
+    noticeEn: string;
+    hintFr: string | null;
+    hintEn: string | null;
+  };
+}
+
+/**
+ * Appareils Bluetooth renvoyés par un pilote de plateforme. La disponibilité est
+ * un fait observé ; la compatibilité OBD reste une présomption (§47).
+ */
+export interface ApiBluetoothDevices {
+  available: boolean;
+  devices: Array<{
+    address: string;
+    name: string;
+    kind: 'spp' | 'ble';
+    paired: boolean;
+    rssi: number | null;
+    likelyObdAdapter: boolean;
+    reasonFr: string;
+    reasonEn: string;
+  }>;
+  noticeFr: string;
+  noticeEn: string;
+  hintFr: string | null;
+  hintEn: string | null;
+  certaintyFr: string;
+  certaintyEn: string;
+}
+
 export interface ApiScenario {
   id: string;
   labelFr: string;

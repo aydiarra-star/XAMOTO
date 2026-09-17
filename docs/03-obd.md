@@ -62,7 +62,51 @@ En navigateur, l'accès utilisateur à un boîtier Bluetooth n'est pas standard 
 Bluetooth est prévu pour l'application mobile (Flutter). L'interface web gère donc le
 **Wi-Fi** et le **simulateur**.
 
-## 5. Simulateur (§30)
+## 5. Adaptateur Bluetooth SPP et BLE
+
+Le Bluetooth passe par un **pilote de plateforme**. Node.js ne sait pas parler
+Bluetooth seul : le transport ne code donc aucun protocole radio, il dialogue avec un
+pilote qui, lui, sait ouvrir une liaison.
+
+```
+Application → couche OBD → BluetoothTransport → pilote de plateforme → ELM327
+```
+
+```ts
+// Application mobile, ou poste de travail avec un pont série.
+registerBluetoothDriver(myDriver);
+const transport = new BluetoothTransport({ address: 'AA:BB:CC:11:22:33', kind: 'spp' });
+const adapter = new Elm327Adapter({ transport, retries: 2 });   // identique au Wi-Fi
+```
+
+Le pilote implémente trois méthodes : `available()`, `list()` et `open()`. Le pilote
+série fourni couvre le Bluetooth SPP d'un poste de travail (`/dev/rfcomm0`, `COM5`,
+via le paquet `serialport`) sans que XAMOTO en dépende :
+
+```ts
+createSerialBluetoothDriver({
+  list: () => Promise.resolve([{ path: '/dev/rfcomm0', name: 'ELM327 v2.1' }]),
+  open: (path, { baudRate }) => openSerialPort(path, baudRate),
+});
+```
+
+### Ce que la couche Bluetooth refuse de faire
+
+| Situation | Comportement |
+| --- | --- |
+| Aucun pilote enregistré | `bluetoothAvailability().available = false`, liste d'appareils **vide**, avec l'explication et la solution. Jamais de liste inventée. |
+| Pilote présent mais hors service | Les pilotes concernés sont **nommés** dans l'erreur : « matériel absent, désactivé, ou permission refusée ». |
+| Appareil au nom d'adaptateur connu | Signalé `likelyObdAdapter: true` avec le motif, et la phrase « à confirmer par un test de liaison (ATZ / ATI) ». |
+| Appareil sans nom | Décrit comme tel ; XAMOTO n'invente pas de description à partir d'une adresse. |
+| Boîtier muet | Le délai expire et la commande échoue explicitement. Aucun scan n'est produit. |
+| Liaison interrompue | La commande en cours est rejetée avec la raison ; aucune valeur partielle n'est présentée. |
+
+L'API expose `GET /api/obd/candidates` (état réel du Bluetooth) et
+`GET /api/obd/bluetooth/devices` (liste proposée par les pilotes, avec
+`certainty: "presumption"`). Sur un serveur sans pilote, cette dernière renvoie une
+liste vide et l'explication — le test de bout en bout le vérifie.
+
+## 6. Simulateur (§30)
 
 `obd/src/simulator/scenarios.ts` contient 8 scénarios :
 
@@ -88,7 +132,7 @@ Le simulateur est un **outil de démonstration et de test**, pas une source de v
 Il permet de tester l'application complète sans véhicule, et sert de base aux tests
 automatisés (`tests/smoke.ts`).
 
-## 6. Ce que la couche OBD ne fait jamais
+## 7. Ce que la couche OBD ne fait jamais
 
 - Elle ne devine pas un PID absent.
 - Elle ne « complète » pas un scan partiel.

@@ -275,18 +275,19 @@ Détail complet : [docs/05-base-de-donnees.md](docs/05-base-de-donnees.md).
 
 ```bash
 npm run typecheck                                     # types paquets + backend + tests
-npm test                                              # 105 tests unitaires
+npm test                                              # 138 tests unitaires
 npm run test:watch                                     # en continu
 
-npm run test:e2e                                       # 35/35 de bout en bout (API + base)
+npm run test:e2e                                       # 37/37 de bout en bout (API + base)
 npm run test:screens                                   # 16/16 écrans rendus sans erreur
 npm run build                                          # interface (app/web/dist)
 ```
 
 Les tests unitaires couvrent ce qui ne doit jamais se casser : le codec des codes
 défaut, les niveaux de certitude et de gravité, les décisions du moteur de
-diagnostic, l'honnêteté du second avis et de l'inspection avant achat, et le refus
-par l'IA de toute donnée inventée (code, valeur, spécification, garantie).
+diagnostic, l'honnêteté du second avis et de l'inspection avant achat, le transport
+Bluetooth (faux pont ELM327, donc sans matériel), et le refus par l'IA de toute
+donnée inventée (code, valeur, spécification, garantie).
 
 Le test de bout en bout vérifie notamment qu'aucune hypothèse « confirmée » n'est
 produite sans test réalisé, qu'un partage au garage est **refusé sans consentement**,

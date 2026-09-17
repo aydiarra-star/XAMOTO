@@ -20,8 +20,8 @@ enfreint n'est pas livrée.
 
 | Principe | Fichier | Test |
 | --- | --- | --- |
-| 1 | `obd/src/protocols/pids.ts`, `backend/src/routes/scan.ts` | `obd/test/protocols.test.ts` : « un octet 0xFF n'est jamais décodé comme une valeur » ; Smoke : « Données non supportées listées » |
-| 2 | `shared/src/levels.ts`, `app/web/src/components.tsx` | `obd/test/protocols.test.ts` : « toute lecture du simulateur est marquée simulated » ; Smoke : « Mention MODE SIMULATION présente » |
+| 1 | `obd/src/protocols/pids.ts`, `backend/src/routes/scan.ts`, `obd/src/adapters/bluetoothTransport.ts` | `obd/test/protocols.test.ts` : « un octet 0xFF n'est jamais décodé comme une valeur » ; `obd/test/bluetooth.test.ts` : « sans pilote enregistré, aucun appareil n'est proposé » ; Smoke : « Données non supportées listées », « Aucun appareil Bluetooth inventé sans pilote » |
+| 2 | `shared/src/levels.ts`, `app/web/src/components.tsx` | `obd/test/protocols.test.ts` : « toute lecture du simulateur est marquée simulated » ; Smoke : « Mention MODE SIMULATION présente » ; `obd/test/bluetooth.test.ts` : aucune liste d'appareils sans pilote |
 | 3 | `diagnostic/src/engine/index.ts`, `hypotheses.ts` | `diagnostic/test/engine.test.ts` : « aucune hypothèse ne peut être confirmée sans test » ; Smoke : « Aucune hypothèse confirmée sans test réalisé » |
 | 4 | `diagnostic/src/safety/index.ts` | `shared/test/levels.test.ts` : `worstSafety` , `diagnostic/test/engine.test.ts` : « la sécurité ne s'adoucit jamais » |
 | 5 | `ai/src/assistant/qa.ts` | `ai/test/anti-hallucination.test.ts` : phrase exacte du §16 pour un code non documenté ; Smoke : « Code non documenté : XAMOTO annonce l'absence de donnée » |
