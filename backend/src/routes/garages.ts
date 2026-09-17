@@ -256,7 +256,7 @@ export async function garageRoutes(app: FastifyInstance): Promise<void> {
         totalLines: analysis.length,
         linesLinkedToMeasuredData: measuredCount,
         linesNotLinked: analysis.length - measuredCount,
-        dataOrigin: result?.dataOrigin ?? 'none',
+        dataOrigin: result?.dataOrigin ?? 'unknown',
         certainty: result?.certainty ?? 'unavailable',
       },
       noticeFr:

@@ -275,7 +275,7 @@ export async function diagnosticRoutes(app: FastifyInstance): Promise<void> {
       diagnostic: serializeDiagnostic(row),
       guided: buildGuidedSession(context, result),
       dataOrigin: result.dataOrigin,
-      simulationNotice: result.dataOrigin === 'simulator' ? 'MODE SIMULATION — données non issues d’un véhicule réel.' : null,
+      simulationNotice: result.dataOrigin === 'simulated' ? 'MODE SIMULATION — données non issues d’un véhicule réel.' : null,
     });
   });
 
@@ -709,7 +709,7 @@ export async function diagnosticRoutes(app: FastifyInstance): Promise<void> {
       titleEn: 'Pre-purchase inspection',
       detail: `Score technique global : ${inspection.scores.overall}/100`,
       refId: inspectionId,
-      origin: result.dataOrigin === 'simulator' ? 'simulated' : 'measured',
+      origin: result.dataOrigin === 'simulated' ? 'simulated' : 'measured',
     });
 
     return reply.code(201).send({

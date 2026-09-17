@@ -17,7 +17,7 @@
  * Une hypothèse « possible » ne doit JAMAIS être présentée comme certaine.
  */
 import type { CertaintyLevel, EvidenceRef, Hypothesis } from '@xamoto/shared';
-import { CERTAINTY_RANK } from '@xamoto/shared';
+import { capCertainty, certaintyAtLeast } from '@xamoto/shared';
 import type { CauseEffect, DiagnosticContext } from '../rules/types.js';
 
 interface Accumulator {
@@ -140,7 +140,7 @@ export function buildHypotheses(
 
     // Aucune donnée mesurée : impossible de dépasser « possible ».
     const hasMeasuredData = ctx.readings.some((r) => r.supported && r.value !== null);
-    if (!hasMeasuredData && CERTAINTY_RANK[certainty] > CERTAINTY_RANK['strongly_compatible']) {
+    if (!hasMeasuredData && certaintyAtLeast(certainty, 'confirmed')) {
       certainty = 'strongly_compatible';
     }
     if (!hasMeasuredData && item.measured === 0 && certainty === 'strongly_compatible') {
@@ -153,10 +153,9 @@ export function buildHypotheses(
       certainty = 'possible';
     }
 
-    // Plafond imposé par le moteur (données insuffisantes, moteur froid…).
-    if (certaintyCap && CERTAINTY_RANK[certainty] > CERTAINTY_RANK[certaintyCap]) {
-      certainty = certaintyCap;
-    }
+    // Plafond imposé par le moteur (données insuffisantes, moteur froid…) :
+    // une cause ne peut jamais dépasser ce que les données autorisent.
+    certainty = capCertainty(certainty, certaintyCap);
 
     const reasoning = [
       ...item.reasons.slice(0, 6).map((r) => r.fr),

@@ -47,7 +47,7 @@ export default function InspectionScreen(): JSX.Element {
   const list = diagnostics.data?.diagnostics ?? [];
   const inspection = run.data?.inspection;
 
-  const checklistKeys = [
+  const checklistKeys: Array<[string, string]> = [
     ['engine_oil', t('Huile et filtres', 'Oil and filters')],
     ['coolant', t('Refroidissement', 'Cooling')],
     ['battery', t('Batterie et charge', 'Battery and charging')],

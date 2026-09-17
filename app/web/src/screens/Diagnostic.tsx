@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, type ApiDiagnostic, type ApiGuidedSession } from '../api';
-import { useI18n } from '../i18n';
+import { pickLabel, useI18n } from '../i18n';
 import { useAction, useAsync, formatDateTime, formatNumber } from '../hooks';
 import { Card, CertaintyBadge, EmptyState, ErrorBox, Notice, OriginBadge, SafetyBadge, SimulationBanner, Spinner } from '../components';
 
@@ -158,7 +158,7 @@ export default function DiagnosticScreen(): JSX.Element {
             <tbody>
               {diagnostic.findings.map((finding) => (
                 <tr key={finding.id}>
-                  <td className="small">{KIND_LABELS[finding.kind] ? (locale === 'en' ? KIND_LABELS[finding.kind].en : KIND_LABELS[finding.kind].fr) : finding.kind}</td>
+                  <td className="small">{pickLabel(KIND_LABELS, finding.kind, locale, { fr: finding.kind, en: finding.kind })}</td>
                   <td>
                     <strong>{locale === 'en' ? finding.titleEn : finding.titleFr}</strong>
                     <div className="small muted">{locale === 'en' ? finding.detailEn : finding.detailFr}</div>

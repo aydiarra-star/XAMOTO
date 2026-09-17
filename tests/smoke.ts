@@ -31,9 +31,22 @@ async function main(): Promise<void> {
 
   /* ── 1. Base amorcée ─────────────────────────────────────────────────── */
   const status = seedStatus();
-  check('Base de connaissances chargée', status.dtcCodes > 20 && status.documents >= 10, `${status.dtcCodes} codes, ${status.documents} documents, ${status.sources} sources`);
-  check('Références véhicules/garages/pièces', status.vehicleSpecs > 5 && status.garages >= 3 && status.parts > 10, `${status.vehicleSpecs} fiches, ${status.garages} garages, ${status.parts} pièces`);
-  check('Compte de démonstration et scans simulés', status.vehicles >= 3 && status.scans >= 3 && status.diagnostics >= 3, `${status.vehicles} véhicules, ${status.scans} scans, ${status.diagnostics} diagnostics`);
+  // Les compteurs sont toujours présents après amorçage ; ?? 0 évite de propager
+  // un « undefined » dans un message d'échec.
+  const counts = {
+    sources: status.sources ?? 0,
+    documents: status.documents ?? 0,
+    dtcCodes: status.dtcCodes ?? 0,
+    vehicleSpecs: status.vehicleSpecs ?? 0,
+    garages: status.garages ?? 0,
+    parts: status.parts ?? 0,
+    vehicles: status.vehicles ?? 0,
+    scans: status.scans ?? 0,
+    diagnostics: status.diagnostics ?? 0,
+  };
+  check('Base de connaissances chargée', counts.dtcCodes > 20 && counts.documents >= 10, `${counts.dtcCodes} codes, ${counts.documents} documents, ${counts.sources} sources`);
+  check('Références véhicules/garages/pièces', counts.vehicleSpecs > 5 && counts.garages >= 3 && counts.parts > 10, `${counts.vehicleSpecs} fiches, ${counts.garages} garages, ${counts.parts} pièces`);
+  check('Compte de démonstration et scans simulés', counts.vehicles >= 3 && counts.scans >= 3 && counts.diagnostics >= 3, `${counts.vehicles} véhicules, ${counts.scans} scans, ${counts.diagnostics} diagnostics`);
 
   /* ── 2. Connexion au compte de démonstration ─────────────────────────── */
   const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: DEMO_CREDENTIALS.email, password: DEMO_CREDENTIALS.password } });

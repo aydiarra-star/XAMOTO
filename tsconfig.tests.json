@@ -1,0 +1,12 @@
+{
+  /*
+   * Vérification de types des scripts de test côté interface (rendu des écrans)
+   * et des scripts d'exploration. On réutilise exactement les options de
+   * `app/web` pour que le rendu hors navigateur soit compilé comme en production.
+   */
+  "extends": "./app/web/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"]
+  },
+  "include": ["tests/**/*.ts", "tests/**/*.tsx", "app/web/src"]
+}

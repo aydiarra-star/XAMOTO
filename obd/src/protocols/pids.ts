@@ -341,7 +341,7 @@ export const PID_DEFINITIONS: PidDefinition[] = [
   },
   {
     obd: '4C',
-    key: 'throttle_position',
+    key: 'throttle_actuator_command',
     labelFr: 'Position papillon (commande)',
     labelEn: 'Commanded throttle actuator',
     unit: '%',

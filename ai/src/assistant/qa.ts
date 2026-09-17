@@ -16,7 +16,7 @@
  * Dans les deux cas : « XAMOTO ne doit jamais inventer une donnée automobile. »
  */
 import type { AiCitation, CertaintyLevel, SafetyLevel } from '@xamoto/shared';
-import { CERTAINTY_LABELS, MESSAGES, SAFETY_LABELS } from '@xamoto/shared';
+import { CERTAINTY_LABELS, MESSAGES, SAFETY_LABELS, DTC_SYSTEM_LABELS } from '@xamoto/shared';
 import { findDtcKnowledge, MAINTENANCE_BY_KIND, SYMPTOM_BY_KEY, TEST_BY_ID } from '@xamoto/diagnostic';
 import type { ContextBuildResult } from './context.js';
 import type { RetrievedDocument } from '../rag/index.js';
@@ -63,7 +63,7 @@ export interface AssistantAnswer {
 const INTENT_PATTERNS: Array<{ intent: AssistantIntent; patterns: RegExp[] }> = [
   { intent: 'can_i_drive', patterns: [/\bpuis[- ]je rouler\b/i, /\bje peux rouler\b/i, /\bpeut[- ]on rouler\b/i, /\bcan i drive\b/i, /\bis it safe to drive\b/i, /\brouler avec\b/i, /\bmana ma doxaan\b/i] },
   { intent: 'why_mil_on', patterns: [/\bpourquoi (le )?voyant\b/i, /\bvoyant moteur (est )?allum/i, /\bcheck engine\b/i, /\bmoteur allum/i, /\bwhy is the (check engine )?light on\b/i, /\bpourquoi (le )?temoin\b/i] },
-  { intent: 'dtc_meaning', patterns: [/^[PCBU][0-3][0-9A-F]{2}$/i, /\bque signifie\b/i, /\bqu[' ]est[- ]ce que (le code|le defaut|cette erreur)\b/i, /\bsignification du code\b/i, /\bwhat does .* mean\b/i, /\bcode .* veut dire\b/i, /\bexplique.*code\b/i] },
+  { intent: 'dtc_meaning', patterns: [/^[PCBU][0-3][0-9A-F]{3}$/i, /\bque signifie\b/i, /\bqu[' ]est[- ]ce que (le code|le defaut|cette erreur)\b/i, /\bsignification du code\b/i, /\bwhat does .* mean\b/i, /\bcode .* veut dire\b/i, /\bexplique.*code\b/i] },
   { intent: 'severity', patterns: [/\best[- ]ce grave\b/i, /\bc[' ]est grave\b/i, /\bgrave ou pas\b/i, /\bdanger/i, /\burgent\b/i, /\bserious\b/i, /\bhow bad\b/i, /\brisque\b/i] },
   { intent: 'which_part', patterns: [/\bquelle pi[eè]ce\b/i, /\bquel composant\b/i, /\bquelle piece\b/i, /\bwhich part\b/i, /\bwhat part\b/i, /\bchang(e|er) (quoi|quelle)\b/i, /\bremplacer quoi\b/i] },
   { intent: 'what_to_check', patterns: [/\bque (dois|devrais)[- ]je v[eé]rifier\b/i, /\bquoi v[eé]rifier\b/i, /\bwhat should i check\b/i, /\bverifier quoi\b/i, /\bquels contr[oô]les\b/i] },
@@ -215,7 +215,7 @@ export function composeDeterministicAnswer(input: ComposeInput): AssistantAnswer
 
     /* ── Signification d'un code ────────────────────────────────────────── */
     case 'dtc_meaning': {
-      const codeMatch = /[PCBU][0-3][0-9A-F]{2}/i.exec(question);
+      const codeMatch = /[PCBU][0-3][0-9A-F]{3}/i.exec(question);
       const requestedCode = codeMatch ? codeMatch[0].toUpperCase() : codes[0];
       const knowledge = requestedCode ? findDtcKnowledge(requestedCode) : undefined;
       if (!requestedCode) {
@@ -238,8 +238,8 @@ export function composeDeterministicAnswer(input: ComposeInput): AssistantAnswer
         .map((c) => `– ${c.labelFr}${inVehicle && top?.causeKey === c.key ? ' (hypothèse la plus compatible avec vos données actuelles)' : ''}`);
       return {
         ...base,
-        contentFr: `${knowledge.code} — ${knowledge.simpleFr}\n\nSystème concerné : ${knowledge.system}.\nGravité intrinsèque du code : ${safetyFr(knowledge.severity)}.\n${inVehicle ? '\nCe code a réellement été lu sur votre véhicule lors du dernier scan.' : '\nCe code ne figure pas dans le dernier scan de votre véhicule : l’explication porte sur la signification générale du code.'}\n\nCauses possibles (aucune n’est certaine sans test) :\n${causesList.join('\n')}\n\nConséquences si rien n’est fait :\n${knowledge.consequences.map((c) => `– ${c}`).join('\n')}\n\nTests qui permettent de trancher :\n${knowledge.relatedTests.map((t) => `– ${TEST_BY_ID.get(t)?.titleFr ?? t}`).join('\n')}${parts.length > 0 ? `\n\nPièces pouvant être concernées (jamais à remplacer sans test) : ${parts.join(', ')}.` : ''}${dataDisclosure(contextResult, 'fr')}${sourcesBlock(citations, 'fr')}${simNoteFr}`,
-        contentEn: `${knowledge.code} — ${knowledge.simpleEn}\n\nAffected system: ${knowledge.system}.\nIntrinsic severity: ${SAFETY_LABELS[knowledge.severity].en}.\n\nPossible causes (none is certain without a test):\n${knowledge.likelyCauses.slice(0, 4).map((c) => `– ${c.labelEn}`).join('\n')}${sourcesBlock(citations, 'en')}${simNoteEn}`,
+        contentFr: `${knowledge.code} — ${knowledge.simpleFr}\n\nSystème concerné : ${DTC_SYSTEM_LABELS[knowledge.system]?.fr ?? knowledge.system}.\nGravité intrinsèque du code : ${safetyFr(knowledge.severity)}.\n${inVehicle ? '\nCe code a réellement été lu sur votre véhicule lors du dernier scan.' : '\nCe code ne figure pas dans le dernier scan de votre véhicule : l’explication porte sur la signification générale du code.'}\n\nCauses possibles (aucune n’est certaine sans test) :\n${causesList.join('\n')}\n\nConséquences si rien n’est fait :\n${knowledge.consequences.map((c) => `– ${c}`).join('\n')}\n\nTests qui permettent de trancher :\n${knowledge.relatedTests.map((t) => `– ${TEST_BY_ID.get(t)?.titleFr ?? t}`).join('\n')}${parts.length > 0 ? `\n\nPièces pouvant être concernées (jamais à remplacer sans test) : ${parts.join(', ')}.` : ''}${dataDisclosure(contextResult, 'fr')}${sourcesBlock(citations, 'fr')}${simNoteFr}`,
+        contentEn: `${knowledge.code} — ${knowledge.simpleEn}\n\nAffected system: ${DTC_SYSTEM_LABELS[knowledge.system]?.en ?? knowledge.system}.\nIntrinsic severity: ${SAFETY_LABELS[knowledge.severity].en}.\n\nPossible causes (none is certain without a test):\n${knowledge.likelyCauses.slice(0, 4).map((c) => `– ${c.labelEn}`).join('\n')}${sourcesBlock(citations, 'en')}${simNoteEn}`,
       };
     }
 

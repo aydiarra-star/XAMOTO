@@ -59,7 +59,16 @@ export interface DiagnosticResult {
     caps: Array<{ level: CertaintyLevel; reasonFr: string }>;
   };
   dataQuality: SafetyAssessment['dataQuality'];
-  dataOrigin: 'obd' | 'simulator' | 'manual' | 'none';
+  /**
+   * §33 — Origine des données du diagnostic, au sens de la provenance :
+   * `simulated` dès qu'une donnée du moteur provient du simulateur, `measured`
+   * lorsqu'au moins une mesure ou un code a été réellement lu sur le véhicule,
+   * `documented` si tout provient de fiches ou de déclarations, `unknown` sans
+   * aucune donnée exploitable. La SOURCE de session (`obd`, `simulator`,
+   * `manual`, `none`) reste portée par le contexte et par la session OBD : les
+   * deux notions ne doivent pas être confondues.
+   */
+  dataOrigin: DataOrigin;
 }
 
 export interface AnalyzeOptions {
@@ -452,8 +461,25 @@ export class DiagnosticEngine {
       });
     }
 
-    const dataOrigin: DiagnosticResult['dataOrigin'] =
-      ctx.source === 'simulator' ? 'simulator' : ctx.source === 'obd' ? 'obd' : ctx.source === 'manual' ? 'manual' : 'none';
+    /*
+     * Origine (§33) : le niveau le plus prudent l'emporte. Une seule donnée
+     * simulée suffit à marquer tout le diagnostic « simulated » ; sans aucune
+     * donnée exploitable, l'origine est « unknown » et non « measured ».
+     */
+    const origins: DataOrigin[] = [
+      ...ctx.readings.map((r) => r.origin),
+      ...ctx.dtcs.map((d) => d.origin),
+    ];
+    const hasUsableData = ctx.readings.some((r) => r.supported && r.value !== null) || ctx.dtcs.length > 0;
+    const dataOrigin: DataOrigin = origins.includes('simulated')
+      ? 'simulated'
+      : !hasUsableData
+        ? 'unknown'
+        : origins.includes('measured')
+          ? 'measured'
+          : origins.includes('documented')
+            ? 'documented'
+            : 'estimated';
 
     return {
       engineVersion: ENGINE_VERSION,

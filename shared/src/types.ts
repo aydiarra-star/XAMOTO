@@ -164,6 +164,7 @@ export const PID_KEYS = [
   'intake_air_temp',
   'engine_load',
   'throttle_position',
+  'throttle_actuator_command',
   'battery_voltage',
   'maf_air_flow',
   'map_pressure',
@@ -205,6 +206,28 @@ export type DtcSystem =
   | 'electrique'
   | 'reseau'
   | 'carrosserie';
+
+/**
+ * Libellés lisibles des systèmes concernés par un code défaut (§40).
+ * Une clé interne ne doit jamais être affichée telle quelle à l'utilisateur.
+ */
+export const DTC_SYSTEM_LABELS: Record<DtcSystem, { fr: string; en: string }> = {
+  moteur: { fr: 'Moteur', en: 'Engine' },
+  allumage: { fr: 'Allumage', en: 'Ignition' },
+  injection: { fr: 'Injection', en: 'Injection' },
+  carburant: { fr: 'Alimentation en carburant', en: 'Fuel system' },
+  admission: { fr: 'Admission d’air', en: 'Air intake' },
+  echappement: { fr: 'Échappement', en: 'Exhaust' },
+  depollution: { fr: 'Dépollution', en: 'Emissions control' },
+  transmission: { fr: 'Transmission', en: 'Transmission' },
+  freinage: { fr: 'Freinage', en: 'Braking' },
+  abs: { fr: 'ABS', en: 'ABS' },
+  airbag: { fr: 'Airbags', en: 'Airbags' },
+  climatisation: { fr: 'Climatisation', en: 'Air conditioning' },
+  electrique: { fr: 'Électricité et électronique', en: 'Electrical and electronic' },
+  reseau: { fr: 'Réseau de communication', en: 'Communication network' },
+  carrosserie: { fr: 'Carrosserie', en: 'Body' },
+};
 
 export interface DtcDefinition {
   code: string;

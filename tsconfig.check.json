@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "paths": {
       "@xamoto/shared": ["./shared/src/index.ts"],
       "@xamoto/diagnostic": ["./diagnostic/src/index.ts"],
@@ -13,6 +14,12 @@
     "obd/src/**/*.ts",
     "diagnostic/src/**/*.ts",
     "ai/src/**/*.ts",
-    "backend/src/**/*.ts"
+    "backend/src/**/*.ts",
+    "tests/smoke.ts",
+    "tests/api-shapes.mts",
+    "shared/test/**/*.ts",
+    "obd/test/**/*.ts",
+    "diagnostic/test/**/*.ts",
+    "ai/test/**/*.ts"
   ]
 }

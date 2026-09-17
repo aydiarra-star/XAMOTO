@@ -20,16 +20,16 @@ enfreint n'est pas livrée.
 
 | Principe | Fichier | Test |
 | --- | --- | --- |
-| 1 | `obd/src/protocols/pids.ts`, `backend/src/routes/scan.ts` | Smoke : « Données non supportées listées » |
-| 2 | `shared/src/levels.ts`, `app/web/src/components.tsx` | Smoke : « Mention MODE SIMULATION présente » |
-| 3 | `diagnostic/src/engine/index.ts`, `hypotheses.ts` | Smoke : « Aucune hypothèse confirmée sans test réalisé » |
-| 4 | `diagnostic/src/safety/index.ts` | `worstSafety` |
-| 5 | `ai/src/assistant/qa.ts` | Smoke : « Code non documenté : XAMOTO annonce l'absence de donnée » |
-| 6 | `diagnostic/src/rules/*` | Types `evidence` dans `diagnostic_findings` |
-| 7 | `ai/src/assistant/llm.ts` | `createLlmProvider('none')` est la configuration par défaut |
+| 1 | `obd/src/protocols/pids.ts`, `backend/src/routes/scan.ts` | `obd/test/protocols.test.ts` : « un octet 0xFF n'est jamais décodé comme une valeur » ; Smoke : « Données non supportées listées » |
+| 2 | `shared/src/levels.ts`, `app/web/src/components.tsx` | `obd/test/protocols.test.ts` : « toute lecture du simulateur est marquée simulated » ; Smoke : « Mention MODE SIMULATION présente » |
+| 3 | `diagnostic/src/engine/index.ts`, `hypotheses.ts` | `diagnostic/test/engine.test.ts` : « aucune hypothèse ne peut être confirmée sans test » ; Smoke : « Aucune hypothèse confirmée sans test réalisé » |
+| 4 | `diagnostic/src/safety/index.ts` | `shared/test/levels.test.ts` : `worstSafety` , `diagnostic/test/engine.test.ts` : « la sécurité ne s'adoucit jamais » |
+| 5 | `ai/src/assistant/qa.ts` | `ai/test/anti-hallucination.test.ts` : phrase exacte du §16 pour un code non documenté ; Smoke : « Code non documenté : XAMOTO annonce l'absence de donnée » |
+| 6 | `diagnostic/src/rules/*` | Types `evidence` dans `diagnostic_findings` ; `diagnostic/test/engine.test.ts` : « chaque hypothèse porte un score, un niveau et une raison » |
+| 7 | `ai/src/assistant/llm.ts` | `ai/test/anti-hallucination.test.ts` : réponse complète sans LLM, et repli si le fournisseur est en erreur |
 | 8 | `backend/src/routes/diagnostic.ts` | Smoke : « Résultat de test refusé sans confirmation » |
-| 9 | `diagnostic/src/engine/secondOpinion.ts` | `disclaimerFr` de la seconde opinion |
-| 10 | `diagnostic/src/safety/canIDrive.ts` | Smoke : « Puis-je rouler ? avec avertissement de non-garantie » |
+| 9 | `diagnostic/src/engine/secondOpinion.ts` | `diagnostic/test/procedures.test.ts` : « ne juge jamais le professionnel ni le prix » |
+| 10 | `diagnostic/src/safety/canIDrive.ts` | `ai/test/anti-hallucination.test.ts` : « rejette une garantie de sécurité » ; Smoke : « Puis-je rouler ? avec avertissement de non-garantie » |
 
 ## Une question de conception, pas de communication
 

@@ -132,12 +132,23 @@ export function secondOpinion(input: SecondOpinionInput, result: DiagnosticResul
   /* 5. Tests supplémentaires. */
   const additionalTests = result.tests.slice(0, 5).map((t) => ({ testKey: t.testKey, title: t.testKey, objective: t.reasonFr, priority: t.priority }));
 
-  const summaryFr =
-    confirmedElements.length === 0 && unconfirmedElements.length === 0
+  /*
+   * §47-1 : sans aucune donnée lue sur le véhicule, on ne peut comparer le
+   * diagnostic reçu à rien. La formulation doit le dire clairement, et non
+   * laisser croire que des mesures ont été analysées.
+   */
+  const hasVehicleData =
+    (input.context.readings as ReadingInput[]).some((r) => r.supported && r.value !== null) ||
+    (input.context.dtcs as DtcInput[]).length > 0;
+
+  const summaryFr = !hasVehicleData
+    ? 'XAMOTO ne dispose pas de données lues sur ce véhicule : aucun scan exploitable n’a été fourni. Les éléments annoncés par le diagnostic externe ne peuvent donc être ni confirmés ni écartés point par point. Effectuez d’abord un scan avec XAMOTO, puis demandez à nouveau un second avis.'
+    : confirmedElements.length === 0 && unconfirmedElements.length === 0
       ? 'XAMOTO ne dispose pas d’éléments suffisants pour analyser ce diagnostic. Effectuez d’abord un scan du véhicule.'
       : `À partir des données lues sur votre véhicule : ${confirmedElements.length} élément(s) sont soutenus par les mesures, ${unconfirmedElements.length} élément(s) ne peuvent être ni confirmés ni écartés. ${alternatives.length} hypothèse(s) alternative(s) restent possibles. Les tests proposés permettent de trancher avant d’engager des frais.`;
-  const summaryEn =
-    confirmedElements.length === 0 && unconfirmedElements.length === 0
+  const summaryEn = !hasVehicleData
+    ? 'XAMOTO has no data read from this vehicle: no usable scan was provided. The elements stated by the external diagnosis can therefore be neither confirmed nor ruled out point by point. First perform a XAMOTO scan, then request a second opinion again.'
+    : confirmedElements.length === 0 && unconfirmedElements.length === 0
       ? 'XAMOTO does not have enough elements to analyse this diagnosis. First perform a vehicle scan.'
       : `Based on the data read from your vehicle: ${confirmedElements.length} element(s) are supported by measurements, ${unconfirmedElements.length} element(s) can be neither confirmed nor ruled out. ${alternatives.length} alternative hypothesis(es) remain possible. The proposed tests allow deciding before spending money.`;
 

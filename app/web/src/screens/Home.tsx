@@ -51,7 +51,7 @@ export default function HomeScreen(): JSX.Element {
 
   const last = diagnostics.data?.diagnostics?.[0] ?? null;
   const dueItems = (maintenance.data?.plan ?? []).filter((item) => item.status === 'overdue' || item.status === 'due_soon');
-  const lastScanSimulated = last?.dataOrigin === 'simulator';
+  const lastScanSimulated = last?.dataOrigin === 'simulated';
 
   return (
     <div>

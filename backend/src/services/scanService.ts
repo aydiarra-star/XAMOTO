@@ -237,7 +237,7 @@ export async function runScan(options: RunScanOptions): Promise<ScanOutcome> {
     detail: diagnostic.conclusionFr,
     refId: diagnosticSessionId,
     odometerKm: vehicle.odometerKm,
-    origin: diagnostic.dataOrigin === 'simulator' ? 'simulated' : 'measured',
+    origin: diagnostic.dataOrigin === 'simulated' ? 'simulated' : 'measured',
   });
   refreshPassport(options.vehicleId);
   refreshAlerts(options.vehicleId, diagnostic, options.userId);

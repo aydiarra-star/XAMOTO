@@ -125,14 +125,37 @@ export function worstSafety(levels: SafetyLevel[]): SafetyLevel {
   );
 }
 
-/** Le niveau de certitude le plus faible d'un lot (règle de prudence). */
+/**
+ * Le niveau de certitude le plus faible d'un lot (règle de prudence).
+ *
+ * Sans aucune évidence, le résultat est « NON DISPONIBLE » et non « CONFIRMÉ » :
+ * une absence de données ne peut jamais produire la certitude la plus forte
+ * (§47-1 et §47-3). Le défaut est donc le plus prudent des niveaux.
+ */
 export function weakestCertainty(levels: CertaintyLevel[]): CertaintyLevel {
-  return levels.reduce<CertaintyLevel>(
+  // Liste vide = aucune évidence : on retourne le niveau le plus prudent.
+  if (levels.length === 0) return 'unavailable';
+  const [first, ...rest] = levels as [CertaintyLevel, ...CertaintyLevel[]];
+  return rest.reduce<CertaintyLevel>(
     (weakest, current) => (CERTAINTY_RANK[current] < CERTAINTY_RANK[weakest] ? current : weakest),
-    'confirmed',
+    first,
   );
 }
 
 export function safetyAtLeast(level: SafetyLevel, threshold: SafetyLevel): boolean {
   return SAFETY_RANK[level] >= SAFETY_RANK[threshold];
+}
+
+/** Le niveau atteint-il au moins ce seuil de certitude ? */
+export function certaintyAtLeast(level: CertaintyLevel, threshold: CertaintyLevel): boolean {
+  return CERTAINTY_RANK[level] >= CERTAINTY_RANK[threshold];
+}
+
+/**
+ * Applique un plafond de certitude : une cause ne peut jamais être plus
+ * affirmative que ce que les données disponibles autorisent.
+ */
+export function capCertainty(level: CertaintyLevel, cap: CertaintyLevel | null | undefined): CertaintyLevel {
+  if (!cap) return level;
+  return weakestCertainty([level, cap]);
 }

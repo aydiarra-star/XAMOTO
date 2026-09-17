@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type ApiMaintenanceItem, type ApiTrend, type ApiUsageFactors } from '../api';
 import { useVehicles } from '../vehicle-context';
-import { useI18n, STATUS_LABELS } from '../i18n';
+import { labelOf, useI18n, STATUS_LABELS } from '../i18n';
 import { useAction, useAsync, formatDate, formatNumber } from '../hooks';
 import { Card, EmptyState, ErrorBox, Notice, OriginBadge, Spinner } from '../components';
 
@@ -100,7 +100,7 @@ export default function MaintenanceScreen(): JSX.Element {
           </thead>
           <tbody>
             {items.map((item) => {
-              const status = STATUS_LABELS[item.status] ?? STATUS_LABELS.unknown;
+              const status = labelOf(STATUS_LABELS, item.status, { fr: item.status, en: item.status });
               return (
                 <tr key={item.id}>
                   <td>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, type ApiTest, type TestOutcome } from '../api';
-import { useI18n, SAFETY_LABELS, OUTCOME_LABELS } from '../i18n';
+import { useI18n, SAFETY_LABELS, OUTCOME_LABELS, labelOf, pickLabel } from '../i18n';
 import { useAction, useAsync, formatDateTime } from '../hooks';
 import { Card, CertaintyBadge, ErrorBox, Notice, SafetyBadge, SimulationBanner, Spinner } from '../components';
 
@@ -92,7 +92,7 @@ export default function GuidedTestsScreen(): JSX.Element {
 
       {tests.map((test) => {
         const isOpen = openTest === test.testKey;
-        const safety = SAFETY_LABELS[test.safety] ?? SAFETY_LABELS.normal;
+        const safety = labelOf(SAFETY_LABELS, test.safety, { fr: 'normal', en: 'normal', icon: '🟢', color: '#22c55e' });
         return (
           <Card key={test.id}>
             <div className="row between">
@@ -123,7 +123,7 @@ export default function GuidedTestsScreen(): JSX.Element {
 
             {test.result && (
               <Notice tone={test.result.outcome === 'ok' ? 'ok' : 'warn'}>
-                <strong>{OUTCOME_LABELS[test.result.outcome] ? (locale === 'en' ? OUTCOME_LABELS[test.result.outcome].en : OUTCOME_LABELS[test.result.outcome].fr) : test.result.outcome}</strong>
+                <strong>{pickLabel(OUTCOME_LABELS, test.result.outcome, locale, { fr: test.result.outcome, en: test.result.outcome })}</strong>
                 {test.result.measuredValue !== null ? ` — ${test.result.measuredValue} ${test.result.unit ?? ''}` : ''}
                 {test.result.note ? <div className="small">{test.result.note}</div> : null}
                 <small>
@@ -153,7 +153,7 @@ export default function GuidedTestsScreen(): JSX.Element {
                     <select id={`outcome-${test.testKey}`} value={form.outcome} onChange={(event) => setForm({ ...form, outcome: event.target.value as TestOutcome })}>
                       {Object.keys(OUTCOME_LABELS).map((key) => (
                         <option key={key} value={key}>
-                          {locale === 'en' ? OUTCOME_LABELS[key].en : OUTCOME_LABELS[key].fr}
+                          {pickLabel(OUTCOME_LABELS, key, locale, { fr: key, en: key })}
                         </option>
                       ))}
                     </select>

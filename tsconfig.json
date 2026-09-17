@@ -1,4 +1,9 @@
 {
+  /*
+   * Configuration par défaut du dépôt (éditeurs, `tsx`, scripts de test).
+   * Le contrôle de types reste `npm run typecheck` (tsconfig.check.json pour les
+   * paquets et les tests unitaires, tsconfig.tests.json pour les écrans).
+   */
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
@@ -6,7 +11,13 @@
     "moduleResolution": "Bundler",
     "module": "ESNext",
     "noEmit": true,
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@xamoto/shared": ["./shared/src/index.ts"],
+      "@xamoto/diagnostic": ["./diagnostic/src/index.ts"],
+      "@xamoto/obd": ["./obd/src/index.ts"],
+      "@xamoto/ai": ["./ai/src/index.ts"]
+    }
   },
-  "include": ["tests", "app/web/src"]
+  "include": ["tests", "app/web/src", "shared/test", "obd/test", "diagnostic/test", "ai/test"]
 }

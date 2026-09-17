@@ -104,7 +104,7 @@ L'assistant refuse et le dit :
 
 ## 7. Sources et traçabilité
 
-Le corpus (`ai/src/rag/corpus.ts`) contient 16 documents issus de 8 sources
+Le corpus (`ai/src/rag/corpus.ts`) contient 18 documents issus de 8 sources
 (SAE J2012, SAE J1979, ISO 15031, ISO 15765, documentation d'atelier XAMOTO, plages
 d'entretien publiées, référentiels de pièces, retours terrain documentés).
 

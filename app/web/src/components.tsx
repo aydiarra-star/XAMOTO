@@ -20,7 +20,8 @@ export function Card({ title, subtitle, children, actions }: { title?: string; s
 
 export function CertaintyBadge({ level, showHelp = false }: { level: string; showHelp?: boolean }): JSX.Element {
   const { locale } = useI18n();
-  const label = CERTAINTY_LABELS[level] ?? CERTAINTY_LABELS.unavailable;
+  const fallback = CERTAINTY_LABELS.unavailable as { fr: string; en: string; color: string; help: string };
+  const label = (CERTAINTY_LABELS[level] as typeof fallback | undefined) ?? fallback;
   return (
     <span className="badge" style={{ background: `${label.color}22`, color: label.color, borderColor: `${label.color}66` }} title={showHelp ? label.help : undefined}>
       <span className="dot" style={{ background: label.color }} />
@@ -31,7 +32,8 @@ export function CertaintyBadge({ level, showHelp = false }: { level: string; sho
 
 export function SafetyBadge({ level }: { level: string }): JSX.Element {
   const { locale } = useI18n();
-  const label = SAFETY_LABELS[level] ?? SAFETY_LABELS.normal;
+  const fallback = SAFETY_LABELS.normal as { fr: string; en: string; color: string; icon: string };
+  const label = (SAFETY_LABELS[level] as typeof fallback | undefined) ?? fallback;
   return (
     <span className="badge" style={{ background: `${label.color}22`, color: label.color, borderColor: `${label.color}66` }} title={label.fr}>
       <span aria-hidden>{label.icon}</span>
@@ -42,9 +44,10 @@ export function SafetyBadge({ level }: { level: string }): JSX.Element {
 
 export function OriginBadge({ origin }: { origin: string }): JSX.Element {
   const { locale } = useI18n();
-  const label = ORIGIN_LABELS[origin] ?? ORIGIN_LABELS.unknown;
+  const fallback = ORIGIN_LABELS.unknown as { fr: string; en: string };
+  const label = (ORIGIN_LABELS[origin] as typeof fallback | undefined) ?? fallback;
   const colors: Record<string, string> = { measured: '#22c55e', documented: '#38bdf8', calculated: '#a78bfa', estimated: '#fbbf24', simulated: '#fb923c', unknown: '#94a3b8' };
-  const color = colors[origin] ?? colors.unknown;
+  const color = colors[origin] ?? colors.unknown ?? '#94a3b8';
   return (
     <span className="badge outline" style={{ color, borderColor: `${color}66` }} title="Origine de la donnée (§33)">
       {locale === 'en' ? label.en : label.fr}

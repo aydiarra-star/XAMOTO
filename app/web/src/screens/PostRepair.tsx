@@ -57,7 +57,7 @@ export default function PostRepairScreen(): JSX.Element {
 
   return (
     <div>
-      {list.some((item) => item.dataOrigin === 'simulator') && <SimulationBanner />}
+      {list.some((item) => item.dataOrigin === 'simulated') && <SimulationBanner />}
 
       <Card
         title={t('Vérifier une réparation', 'Verify a repair')}

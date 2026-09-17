@@ -69,7 +69,7 @@ export default function AssistantScreen(): JSX.Element {
     t('Que dois-je vérifier avant un long trajet ?', 'What should I check before a long trip?'),
   ];
 
-  const simulated = lastDiagnostic.data?.diagnostics?.[0]?.dataOrigin === 'simulator';
+  const simulated = lastDiagnostic.data?.diagnostics?.[0]?.dataOrigin === 'simulated';
 
   return (
     <div>

@@ -48,6 +48,30 @@ export function useI18n(): I18nValue {
 
 /* ───────────────────────── Libellés normalisés (§10, §11, §33) ───────────── */
 
+/**
+ * Lecture d'un libellé traduit par clé libre. Renvoie toujours un libellé :
+ * une clé inattendue ne doit jamais afficher « undefined » à l'utilisateur.
+ */
+export function labelOf<T extends { fr: string; en: string }>(
+  map: Record<string, T>,
+  key: string | null | undefined,
+  fallback: T,
+): T {
+  if (!key) return fallback;
+  return (map[key] as T | undefined) ?? fallback;
+}
+
+/** Version « courte » : la chaîne traduite, jamais vide. */
+export function pickLabel<T extends { fr: string; en: string }>(
+  map: Record<string, T>,
+  key: string | null | undefined,
+  locale: Locale,
+  fallback: T,
+): string {
+  const entry = labelOf(map, key, fallback);
+  return locale === 'en' ? entry.en : entry.fr;
+}
+
 export const CERTAINTY_LABELS: Record<string, { fr: string; en: string; wo: string; color: string; help: string }> = {
   confirmed: {
     fr: 'CONFIRMÉ',

@@ -74,7 +74,7 @@ export function validateAnswer(
   const { pack } = contextResult;
 
   /* 1. Codes défaut mentionnés -------------------------------------------------- */
-  const mentioned = [...new Set((answer.toUpperCase().match(/\b[PCBU][0-3][0-9A-F]{2}\b/g) ?? []).map((c) => c))];
+  const mentioned = [...new Set((answer.toUpperCase().match(/\b[PCBU][0-3][0-9A-F]{3}\b/g) ?? []).map((c) => c))];
   const knownInContext = new Set(pack.dtcs.map((d) => d.code.toUpperCase()));
   const citedText = citedDocuments.map((d) => `${d.titleFr} ${d.titleEn} ${d.contentFr} ${d.contentEn}`).join(' ').toUpperCase();
   for (const code of mentioned) {

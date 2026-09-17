@@ -19,7 +19,7 @@ export interface DecodedDtc {
   /** 0 = générique SAE, 1 = constructeur, 2/3 = réservé. */
   type: 'generic' | 'manufacturer' | 'reserved';
   system: string;
-  /** Numéro de séquence, ex. 420 pour P0420. */
+  /** Valeur des quatre chiffres hexadécimaux (P0420 → 0x0420 = 1056). */
   sequence: number;
 }
 
@@ -27,34 +27,39 @@ export function decodeDtcBytes(a: number, b: number): DecodedDtc {
   const family = (a & 0xc0) >> 6;
   const type = (a & 0x30) >> 4;
   const familyInfo = DTC_FAMILIES[family] ?? { letter: 'P', system: 'Inconnu' };
-  const digit1 = a & 0x0f;
-  const digit2 = (b & 0xf0) >> 4;
-  const digit3 = b & 0x0f;
+  // Les quatre chiffres du code : type (0 générique / 1 constructeur), puis
+  // les trois demi-octets utiles. Ex. 0x04 0x20 → P0420.
+  const second = a & 0x0f;
+  const third = (b & 0xf0) >> 4;
+  const fourth = b & 0x0f;
   return {
-    code: `${familyInfo.letter}${digit1}${digit2}${digit3}`,
+    code: `${familyInfo.letter}${type}${second}${third}${fourth}`,
     letter: familyInfo.letter,
     type: type === 0 ? 'generic' : type === 1 ? 'manufacturer' : 'reserved',
     system: familyInfo.system,
-    sequence: digit1 * 256 + digit2 * 16 + digit3,
+    sequence: type * 4096 + second * 256 + third * 16 + fourth,
   };
 }
 
 const LETTER_INDEX: Record<string, number> = { P: 0b00, C: 0b01, B: 0b10, U: 0b11 };
 
 export function encodeDtcCode(code: string): [number, number] | null {
-  const m = /^([PCBU])([0-3])([0-9A-F])([0-9A-F])$/i.exec(code.trim());
+  // Format normalisé SAE J2012 : une lettre puis QUATRE caractères hexadécimaux
+  // (ex. P0420, P0300, U0100). Le premier chiffre encode le type de code.
+  const m = /^([PCBU])([0-3])([0-9A-F])([0-9A-F])([0-9A-F])$/i.exec(code.trim());
   if (!m) return null;
   const letter = (m[1] as string).toUpperCase();
   const family = LETTER_INDEX[letter];
   if (family === undefined) return null;
-  const d1 = Number(m[2]);
-  const d2 = parseInt(m[3] as string, 16);
-  const d3 = parseInt(m[4] as string, 16);
-  return [(family << 6) | (0 << 4) | d1, (d2 << 4) | d3];
+  const type = Number(m[2]);
+  const second = parseInt(m[3] as string, 16);
+  const third = parseInt(m[4] as string, 16);
+  const fourth = parseInt(m[5] as string, 16);
+  return [(family << 6) | (type << 4) | second, (third << 4) | fourth];
 }
 
 export function isValidDtc(code: string): boolean {
-  return /^[PCBU][0-3][0-9A-F]{2}$/i.test(code.trim());
+  return /^[PCBU][0-3][0-9A-F]{3}$/i.test(code.trim());
 }
 
 /**
@@ -76,18 +81,24 @@ export function parseDtcResponse(raw: string, expectedMode: 3 | 7 | 10 = 3): str
     }
   }
   // On cherche la réponse `43` (ou 47/4A) puis on lit les paires d'octets.
-  let idx = bytes.findIndex((b) => b === parseInt(responseMarker, 16));
-  if (idx === -1) {
-    // Certains adaptateurs renvoient les données sans écho du mode : on tente
-    // d'interpréter directement les paires valides.
-    idx = 0;
-    bytes = bytes.filter((b) => b !== 0x00);
-  } else {
-    bytes = bytes.slice(idx + 1);
-  }
-  for (let i = 0; i + 1 < bytes.length; i += 2) {
-    const a = bytes[i] as number;
-    const b = bytes[i + 1] as number;
+  const idx = bytes.findIndex((b) => b === parseInt(responseMarker, 16));
+  // Certains adaptateurs renvoient les données sans écho du mode : on interprète
+  // alors la trame à partir du premier octet.
+  let payload = idx === -1 ? bytes : bytes.slice(idx + 1);
+  /*
+   * Attention : le premier octet de la charge utile est le NOMBRE de codes
+   * (mode 43 / 47 / 4A), suivi de N paires d'octets. La charge utile est donc
+   * de longueur impaire. Ne pas retirer cet octet décalait toutes les paires
+   * et produisait des codes inexistants — un vrai P0420 était lu « P0204 ».
+   */
+  if (payload.length % 2 === 1) payload = payload.slice(1);
+  /*
+   * Ne jamais filtrer les octets nuls : 0x00 est une valeur légitime (c'est le
+   * 4e chiffre de P0300) et un filtrage décalait les paires.
+   */
+  for (let i = 0; i + 1 < payload.length; i += 2) {
+    const a = payload[i] as number;
+    const b = payload[i + 1] as number;
     if (a === 0 && b === 0) continue;
     codes.push(decodeDtcBytes(a, b).code);
   }

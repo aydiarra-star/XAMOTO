@@ -18,8 +18,9 @@ Deux interdits structurants :
 
 - **ne pas tout construire d'un coup** ; une phase livrée et vérifiée vaut mieux que
   dix fonctionnalités à moitié terminées ;
-- **ne jamais casser une fonctionnalité validée** : chaque phase rejoue les tests des
-  phases antérieures (`tests/smoke.ts`, `tests/web-smoke.tsx`, `npm run typecheck`).
+- **ne jamais casser une fonctionnalité validée** : chaque phase rejoue les
+  vérifications des phases antérieures (`npm test`, `npm run test:e2e`,
+  `npm run test:screens`, `npm run typecheck`).
 
 ## 2. MVP — version 1 (§42)
 
@@ -69,11 +70,20 @@ Deux interdits structurants :
 
 | Vérification | Commande | Résultat attendu |
 | --- | --- | --- |
-| Types (moteur, OBD, IA, backend) | `npm run typecheck` | 0 erreur |
+| Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
-| Bout en bout API | `XAMOTO_DB_PATH=./data/smoke.sqlite npx tsx tests/smoke.ts` | 35/35 |
-| Rendu des écrans | `npx tsx tests/web-smoke.tsx` | 16/16 |
+| Tests unitaires | `npm test` | 105/105 |
+| Bout en bout API | `npm run test:e2e` | 35/35 |
+| Rendu des écrans | `npm run test:screens` | 16/16 |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+Après la phase 1 (MVP), la phase 2 a été consacrée à la solidité des couches
+sensibles : tests unitaires du codec de codes défaut, du moteur de diagnostic, de la
+base de connaissances, des procédures (après réparation, second avis, inspection) et
+de l'anti-hallucination. Ces tests ont révélé et permis de corriger cinq défauts
+réels, dont un codec DTC qui rendait impossible toute correspondance entre un code
+lu sur un véhicule et la base de connaissances (détail :
+[docs/09-tests.md](09-tests.md), § 2.1).
 
 ## 6. Ce qui reste à faire après cette phase
 

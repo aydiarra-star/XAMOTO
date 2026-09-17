@@ -27,7 +27,7 @@ export { TcpTransport, COMMON_ELM327_HOSTS, COMMON_ELM327_PORTS } from './adapte
 export type { TcpTransportOptions } from './adapters/tcpTransport.js';
 export { ObdSimulator, SCENARIO_BY_ID } from './simulator/scenarios.js';
 export type { SimulationScenario, SimulationScenarioId, SimulatedState, SimulationReading, ScenarioDtcSpec } from './simulator/scenarios.js';
-export { PID_DEFINITIONS, PID_BY_KEY, PID_BY_OBD, CORE_PID_KEYS, EXTENDED_PID_KEYS } from './protocols/pids.js';
+export { PID_DEFINITIONS, PID_BY_KEY, PID_BY_OBD, CORE_PID_KEYS, EXTENDED_PID_KEYS, isUnavailable } from './protocols/pids.js';
 export type { PidDefinition } from './protocols/pids.js';
 export { parseMode01, extractBytes, parseSupportedPids, protocolFromDpn, ELM_INIT_SEQUENCE, PROTOCOL_NAMES } from './protocols/elm327.js';
 export { parseDtcResponse, decodeDtcBytes, encodeDtcCode, isValidDtc, DTC_FAMILIES } from './protocols/dtc.js';

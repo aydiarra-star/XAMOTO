@@ -274,13 +274,19 @@ Détail complet : [docs/05-base-de-donnees.md](docs/05-base-de-donnees.md).
 ## Tests
 
 ```bash
-npm run typecheck                                     # types moteur/OBD/IA/backend
-npx tsc -p app/web/tsconfig.json --noEmit             # types interface
+npm run typecheck                                     # types paquets + backend + tests
+npm test                                              # 105 tests unitaires
+npm run test:watch                                     # en continu
 
-XAMOTO_DB_PATH=./data/smoke.sqlite NODE_ENV=test npx tsx tests/smoke.ts   # 35/35
-npx tsx tests/web-smoke.tsx                                                # 16/16
-npm run build                                                              # interface
+npm run test:e2e                                       # 35/35 de bout en bout (API + base)
+npm run test:screens                                   # 16/16 écrans rendus sans erreur
+npm run build                                          # interface (app/web/dist)
 ```
+
+Les tests unitaires couvrent ce qui ne doit jamais se casser : le codec des codes
+défaut, les niveaux de certitude et de gravité, les décisions du moteur de
+diagnostic, l'honnêteté du second avis et de l'inspection avant achat, et le refus
+par l'IA de toute donnée inventée (code, valeur, spécification, garantie).
 
 Le test de bout en bout vérifie notamment qu'aucune hypothèse « confirmée » n'est
 produite sans test réalisé, qu'un partage au garage est **refusé sans consentement**,
