@@ -1,0 +1,38 @@
+# Node
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+
+# Base de données locale (SQLite de développement)
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+
+# Env
+.env
+.env.local
+*.local
+
+# Artefacts de test
+coverage/
+.vitest/
+
+# OS / éditeurs
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Flutter / Dart
+app/mobile/.dart_tool/
+app/mobile/.flutter-plugins
+app/mobile/build/
+app/mobile/ios/Pods/
+app/mobile/android/.gradle/
+
+# Rapports générés
+reports/*
+!reports/.gitkeep

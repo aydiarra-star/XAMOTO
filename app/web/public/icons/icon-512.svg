@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="XAMOTO">
+  <rect width="512" height="512" rx="112" fill="#0b1220" />
+  <path d="M104 136 L224 256 L104 376" stroke="#38bdf8" stroke-width="38" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M408 136 L288 256 L408 376" stroke="#6366f1" stroke-width="38" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="256" y="470" font-family="system-ui, sans-serif" font-size="64" font-weight="700" fill="#9fb0c9" text-anchor="middle">XAMOTO</text>
+</svg>
