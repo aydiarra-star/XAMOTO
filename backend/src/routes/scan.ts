@@ -1,0 +1,414 @@
+/**
+ * XAMOTO — Scan OBD et sessions (§7, §8, §29, §30).
+ *
+ * Deux voies d'acquisition, jamais confondues :
+ *   – `mode: "obd"` : adaptateur ELM327 réel (Wi-Fi/TCP côté serveur ;
+ *     Bluetooth côté application mobile), données d'origine `measured` ;
+ *   – `mode: "simulator"` : scénario de simulation, origine `simulated`,
+ *     affichage « MODE SIMULATION » obligatoire.
+ */
+import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { all, get, jsonParse, type Row } from '../db/index.js';
+import { assertVehicleAccess, authenticate, type AuthUser } from '../auth/index.js';
+import { ClientScanInputError, runScan } from '../services/scanService.js';
+import {
+  COMMON_ELM327_HOSTS,
+  COMMON_ELM327_PORTS,
+  SCENARIOS,
+  TcpTransport,
+  Elm327Adapter,
+  bluetoothAvailability,
+  listBluetoothDevices,
+} from '@xamoto/obd';
+import type { SimulationScenarioId } from '@xamoto/obd';
+
+/**
+ * Les identifiants de scénarios viennent du simulateur lui-même : une liste
+ * recopiée ici finirait par diverger et refuser un scénario qui existe.
+ */
+const SCENARIO_IDS = SCENARIOS.map((scenario) => scenario.id) as [string, ...string[]];
+
+/**
+ * Mesures transmises par l'application mobile (§7, §34).
+ *
+ * `origin: 'simulated'` est refusé ici, et pas seulement plus loin : le
+ * simulateur vit sur le serveur, une donnée simulée arrivant d'un téléphone ne
+ * peut pas être distinguée d'une donnée réelle par l'utilisateur (§47-1, §47-2).
+ */
+const localReadingSchema = z.object({
+  key: z.string(),
+  value: z.number().nullable(),
+  supported: z.boolean().default(true),
+  unit: z.string().nullable().optional(),
+  origin: z
+    .enum(['measured', 'documented', 'calculated', 'estimated'], {
+      errorMap: () => ({
+        message:
+          'Une donnée simulée ne peut pas venir du téléphone : le simulateur vit sur le serveur. Indiquez « measured », « calculated », « documented » ou « estimated ».',
+      }),
+    })
+    .default('measured'),
+});
+
+const localDtcSchema = z.object({
+  code: z.string().regex(/^[PCBU][0-9A-F]{4}$/, 'Code défaut invalide (attendu : P/C/B/U suivi de 4 caractères hexadécimaux).'),
+  status: z.enum(['active', 'pending', 'stored']).default('stored'),
+  occurrences: z.number().int().min(1).max(999).optional(),
+  freezeFrame: z.record(z.union([z.number(), z.string(), z.null()])).optional(),
+});
+
+const localSchema = z.object({
+  protocol: z.string().nullable().optional(),
+  device: z
+    .object({
+      id: z.string(),
+      label: z.string(),
+      kind: z.enum(['bluetooth', 'wifi']),
+      model: z.string().nullable().optional(),
+      firmware: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  milOn: z.boolean().default(false),
+  readings: z.array(localReadingSchema).max(64).default([]),
+  dtcs: z.array(localDtcSchema).max(32).default([]),
+  unsupportedPids: z.array(z.string()).max(64).optional(),
+  warnings: z.array(z.string()).max(20).optional(),
+});
+
+const scanSchema = z.object({
+  vehicleId: z.string(),
+  mode: z.enum(['obd', 'simulator', 'local']).default('simulator'),
+  /** Mode `local` : la lecture a eu lieu sur le téléphone. */
+  local: localSchema.optional(),
+  scenario: z.enum(SCENARIO_IDS).optional(),
+  host: z.string().optional(),
+  port: z.number().int().optional(),
+  samples: z.number().int().min(1).max(12).default(5),
+  symptoms: z
+    .array(
+      z.object({
+        key: z.string(),
+        present: z.boolean().default(true),
+        intensity: z.enum(['light', 'moderate', 'severe']).optional(),
+        note: z.string().optional(),
+      }),
+    )
+    .default([]),
+  analysisMode: z.enum(['standard', 'guided', 'inspection', 'second_opinion', 'post_repair']).default('standard'),
+});
+
+export async function scanRoutes(app: FastifyInstance): Promise<void> {
+  app.addHook('preHandler', authenticate);
+
+  /** Découverte des adaptateurs Wi-Fi usuels (utile avant un scan réel). */
+  app.get('/api/obd/candidates', async (_request, reply) => {
+    const bluetooth = bluetoothAvailability();
+    return reply.send({
+      hosts: COMMON_ELM327_HOSTS,
+      ports: COMMON_ELM327_PORTS,
+      notice:
+        'XAMOTO teste la présence d’un adaptateur ELM327 compatible (Wi-Fi). Le Bluetooth dépend de la plateforme : XAMOTO annonce ce qu’il peut réellement faire au lieu de le supposer.',
+      bluetooth: {
+        available: bluetooth.available,
+        drivers: bluetooth.drivers,
+        noticeFr: bluetooth.noticeFr,
+        noticeEn: bluetooth.noticeEn,
+        hintFr: bluetooth.hintFr ?? null,
+        hintEn: bluetooth.hintEn ?? null,
+      },
+    });
+  });
+
+  /**
+   * Appareils Bluetooth proposés par un pilote de plateforme (§7, §29).
+   * Sans pilote enregistré, XAMOTO renvoie une liste vide en expliquant
+   * pourquoi : il n’existe aucun chemin de code produisant une liste inventée.
+   */
+  app.get('/api/obd/bluetooth/devices', async (request, reply) => {
+    const query = z.object({ kind: z.enum(['spp', 'ble']).optional() }).safeParse(request.query);
+    if (!query.success) return reply.code(400).send({ error: { code: 'invalid_input', message: 'Type de liaison invalide.' } });
+    const status = bluetoothAvailability();
+    const devices = await listBluetoothDevices({ kind: query.data.kind });
+    // §47 : la disponibilité est un FAIT observé, la compatibilité une présomption.
+    return reply.send({
+      available: status.available,
+      devices: devices.map((device) => ({
+        address: device.address,
+        name: device.name,
+        kind: device.kind,
+        paired: device.paired,
+        rssi: device.rssi ?? null,
+        likelyObdAdapter: device.likelyObdAdapter,
+        reasonFr: device.reasonFr,
+        reasonEn: device.reasonEn,
+      })),
+      drivers: status.drivers,
+      noticeFr: status.noticeFr,
+      noticeEn: status.noticeEn,
+      hintFr: status.hintFr ?? null,
+      hintEn: status.hintEn ?? null,
+      certainty: 'presumption' as const,
+      certaintyFr:
+        'Un appareil signalé « probable » n’est pas un adaptateur confirmé : il faudra une liaison réelle (ATZ / ATI) pour le savoir. XAMOTO n’affirme rien avant.',
+      certaintyEn:
+        'A device marked "likely" is not a confirmed adapter: a real link (ATZ / ATI) is needed to know. XAMOTO asserts nothing before that.',
+    });
+  });
+
+  app.post('/api/obd/probe', async (request, reply) => {
+    const schema = z.object({ host: z.string(), port: z.number().int().optional() });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: { code: 'invalid_input', message: 'Adresse de l’adaptateur requise.' } });
+    const transport = new TcpTransport({ host: parsed.data.host, port: parsed.data.port });
+    const adapter = new Elm327Adapter({ transport, retries: 1 });
+    try {
+      const info = await adapter.connect();
+      await adapter.disconnect();
+      return reply.send({ reachable: true, device: info });
+    } catch (error) {
+      return reply.send({
+        reachable: false,
+        error: (error as Error).message,
+        hint:
+          'Vérifiez que le contact est mis, que l’adaptateur est alimenté par la prise OBD et que le téléphone/ordinateur est connecté à son réseau Wi-Fi.',
+      });
+    }
+  });
+
+  app.get('/api/obd/simulator/scenarios', async (_request, reply) => {
+    return reply.send({
+      scenarios: SCENARIOS.map((scenario) => ({
+        id: scenario.id,
+        labelFr: scenario.labelFr,
+        labelEn: scenario.labelEn,
+        descriptionFr: scenario.descriptionFr,
+        descriptionEn: scenario.descriptionEn,
+        vehicle: scenario.demoVehicle,
+        dtcCodes: scenario.dtcs.map((d) => ({ code: d.code, status: d.status, appearsAtSeconds: d.appearsAtSeconds })),
+        symptoms: scenario.defaultSymptoms,
+        unsupportedPids: scenario.unsupportedPids,
+      })),
+      notice: 'MODE SIMULATION : ces scénarios ne proviennent pas d’un véhicule réel.',
+    });
+  });
+
+  app.post('/api/scans', async (request, reply) => {
+    const parsed = scanSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: { code: 'invalid_input', message: 'Paramètres de scan invalides.', details: parsed.error.flatten() } });
+    const user = request.user as AuthUser;
+    assertVehicleAccess(parsed.data.vehicleId, user, 'diagnose');
+
+    try {
+      const outcome = await runScan({
+        userId: user.id,
+        vehicleId: parsed.data.vehicleId,
+        mode: parsed.data.mode,
+        scenario: parsed.data.scenario as SimulationScenarioId | undefined,
+        local: parsed.data.local
+          ? {
+              protocol: parsed.data.local.protocol ?? null,
+              device: parsed.data.local.device
+                ? {
+                    id: parsed.data.local.device.id,
+                    label: parsed.data.local.device.label,
+                    kind: parsed.data.local.device.kind,
+                    model: parsed.data.local.device.model ?? null,
+                    firmware: parsed.data.local.device.firmware ?? null,
+                  }
+                : null,
+              milOn: parsed.data.local.milOn,
+              readings: parsed.data.local.readings.map((reading) => ({
+                key: reading.key,
+                value: reading.value,
+                supported: reading.supported,
+                unit: reading.unit ?? null,
+                origin: reading.origin,
+              })),
+              dtcs: parsed.data.local.dtcs.map((dtc) => ({
+                code: dtc.code,
+                status: dtc.status,
+                occurrences: dtc.occurrences,
+                freezeFrame: dtc.freezeFrame,
+              })),
+              unsupportedPids: parsed.data.local.unsupportedPids,
+              warnings: parsed.data.local.warnings,
+            }
+          : undefined,
+        host: parsed.data.host,
+        port: parsed.data.port,
+        samples: parsed.data.samples,
+        symptoms: parsed.data.symptoms as never,
+        analysisMode: parsed.data.analysisMode,
+      });
+
+      return reply.code(201).send({
+        sessionId: outcome.scan.sessionId,
+        diagnosticSessionId: outcome.diagnosticSessionId,
+        source: outcome.scan.source,
+        scenario: outcome.scenario ?? null,
+        protocol: outcome.scan.protocol,
+        milOn: outcome.scan.milOn,
+        startedAt: outcome.scan.startedAt,
+        finishedAt: outcome.scan.finishedAt,
+        device: outcome.scan.device,
+        readings: outcome.scan.readings,
+        dtcs: outcome.scan.dtcs,
+        unsupportedPids: outcome.scan.unsupportedPids,
+        warnings: outcome.scan.warnings,
+        notes: outcome.scan.notes,
+        diagnostic: outcome.diagnostic,
+        simulationNotice: outcome.scan.source === 'simulator' ? 'MODE SIMULATION — données non issues d’un véhicule réel.' : null,
+      });
+    } catch (error) {
+      const message = (error as Error).message;
+      // Données invalides côté client (téléphone) → 400. Panne de liaison → 502.
+      if (error instanceof ClientScanInputError) {
+        return reply.code(400).send({
+          error: {
+            code: 'invalid_scan_data',
+            message,
+            hint: 'XAMOTO n’enregistre que des données réellement lues, avec leur provenance.',
+          },
+        });
+      }
+      return reply.code(502).send({
+        error: {
+          code: 'scan_failed',
+          message: `Le scan n’a pas pu aboutir : ${message}`,
+          hint: 'Aucune donnée n’a été enregistrée. XAMOTO ne remplace jamais une lecture échouée par une valeur estimée.',
+        },
+      });
+    }
+  });
+
+  app.get('/api/scans', async (request, reply) => {
+    const user = request.user as AuthUser;
+    const query = request.query as { vehicleId?: string; limit?: string };
+    const limit = Math.min(Number(query.limit ?? 20), 100);
+    const rows = query.vehicleId
+      ? (assertVehicleAccess(query.vehicleId, user), all<Row>('SELECT * FROM obd_sessions WHERE vehicle_id = ? ORDER BY started_at DESC LIMIT ?', [query.vehicleId, limit]))
+      : all<Row>(
+          `SELECT s.* FROM obd_sessions s JOIN vehicles v ON v.id = s.vehicle_id WHERE v.owner_id = ? ORDER BY s.started_at DESC LIMIT ?`,
+          [user.id, limit],
+        );
+    return reply.send({
+      scans: rows.map((row) => ({
+        id: row.id,
+        vehicleId: row.vehicle_id,
+        source: row.source,
+        scenario: row.scenario,
+        protocol: row.protocol,
+        startedAt: row.started_at,
+        status: row.status,
+        milOn: Number(row.mil_on) === 1,
+        pidCount: Number(row.pid_count),
+        dtcCount: Number(row.dtc_count),
+      })),
+    });
+  });
+
+  app.get('/api/scans/:id', async (request, reply) => {
+    const user = request.user as AuthUser;
+    const { id: sessionId } = request.params as { id: string };
+    const session = get<Row>('SELECT * FROM obd_sessions WHERE id = ?', [sessionId]);
+    if (!session) return reply.code(404).send({ error: { code: 'not_found', message: 'Scan introuvable.' } });
+    assertVehicleAccess(String(session.vehicle_id), user);
+
+    const readings = all<Row>('SELECT * FROM obd_data WHERE session_id = ?', [sessionId]).map((row) => ({
+      key: row.pid_key,
+      obdPid: row.pid,
+      label: row.label,
+      value: row.value === null ? null : Number(row.value),
+      unit: row.unit,
+      supported: Number(row.supported) === 1,
+      origin: row.origin,
+      condition: row.condition,
+      series: jsonParse<number[]>(row.series, []),
+      capturedAt: row.captured_at,
+    }));
+    const dtcs = all<Row>('SELECT * FROM dtc_events WHERE session_id = ?', [sessionId]).map((row) => ({
+      code: row.code,
+      status: row.status,
+      occurrences: Number(row.occurrences),
+      freezeFrame: jsonParse<Record<string, unknown>>(row.freeze_frame, {}),
+      origin: row.origin,
+      lastSeenAt: row.last_seen_at,
+      returnedAfterClear: Number(row.returned_after_clear) === 1,
+    }));
+    const diagnosticSession = get<Row>('SELECT * FROM diagnostic_sessions WHERE obd_session_id = ? ORDER BY started_at DESC LIMIT 1', [sessionId]);
+
+    return reply.send({
+      scan: {
+        id: session.id,
+        vehicleId: session.vehicle_id,
+        source: session.source,
+        scenario: session.scenario,
+        protocol: session.protocol,
+        startedAt: session.started_at,
+        endedAt: session.ended_at,
+        status: session.status,
+        milOn: Number(session.mil_on) === 1,
+      },
+      readings,
+      dtcs,
+      diagnosticSessionId: diagnosticSession?.id ?? null,
+      simulationNotice: session.source === 'simulator' ? 'MODE SIMULATION — données non issues d’un véhicule réel.' : null,
+      provenance: {
+        source: `OBD ${session.protocol ?? ''}`.trim(),
+        acquisition: session.started_at,
+        session: session.id,
+      },
+    });
+  });
+
+  /**
+   * Effacement des défauts (§18) : XAMOTO n'efface pas à l'aveugle.
+   * L'API refuse l'effacement si un diagnostic n'a pas encore été établi, et
+   * enregistre l'effacement dans l'historique pour détecter un retour du code.
+   */
+  app.post('/api/scans/:id/clear', async (request, reply) => {
+    const user = request.user as AuthUser;
+    const { id: sessionId } = request.params as { id: string };
+    const session = get<Row>('SELECT * FROM obd_sessions WHERE id = ?', [sessionId]);
+    if (!session) return reply.code(404).send({ error: { code: 'not_found', message: 'Scan introuvable.' } });
+    assertVehicleAccess(String(session.vehicle_id), user, 'diagnose');
+    const schema = z.object({ confirm: z.boolean(), reason: z.string().optional() });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success || !parsed.data.confirm) {
+      return reply.code(400).send({
+        error: {
+          code: 'confirmation_required',
+          message: 'L’effacement des défauts doit être confirmé explicitement.',
+        },
+      });
+    }
+
+    const { run, now, id, audit } = await import('../db/index.js');
+    run('UPDATE dtc_events SET cleared_at = ? WHERE session_id = ? AND cleared_at IS NULL', [now(), sessionId]);
+    run('INSERT INTO vehicle_events (id, vehicle_id, type, title_fr, title_en, detail, ref_id, occurred_at, origin) VALUES (?,?,?,?,?,?,?,?,?)', [
+      id('evt'),
+      String(session.vehicle_id),
+      'note',
+      'Effacement des défauts',
+      'Faults cleared',
+      parsed.data.reason ?? 'Effacement confirmé par l’utilisateur',
+      sessionId,
+      now(),
+      'documented',
+    ]);
+    audit('scan.dtcs_cleared', 'obd_sessions', sessionId, user.id, { reason: parsed.data.reason });
+    return reply.send({
+      ok: true,
+      noteFr:
+        'Effacement enregistré. XAMOTO comparera le prochain scan à cet effacement : si un défaut revient, il sera identifié comme « revenu après effacement », ce qui est une information de diagnostic importante.',
+      noteEn:
+        'Clear recorded. XAMOTO will compare the next scan with this clear: if a fault returns, it will be identified as "returned after clearing", which is important diagnostic information.',
+      warningFr:
+        session.source === 'simulator'
+          ? 'MODE SIMULATION : l’effacement est simulé, le scénario continuera de produire le défaut.'
+          : 'Un défaut effacé ne prouve pas une réparation : roulez puis refaites un scan pour vérifier.',
+    });
+  });
+}

@@ -1,0 +1,41 @@
+{
+  "name": "xamoto",
+  "version": "1.0.0",
+  "private": true,
+  "description": "XAMOTO — Connaître sa voiture. Plateforme de diagnostic, compréhension, entretien et suivi automobile.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "diagnostic",
+    "obd",
+    "ai",
+    "backend",
+    "app/web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --workspace backend run dev",
+    "dev:web": "npm --workspace app-web run dev",
+    "build": "npm --workspace app-web run build",
+    "start": "npm --workspace backend run start",
+    "seed": "npm --workspace backend run seed",
+    "seed:sql": "tsx scripts/export-knowledge-sql.ts",
+    "mobile:i18n": "tsx scripts/export-mobile-i18n.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "rm -f data/smoke.sqlite* && XAMOTO_DB_PATH=./data/smoke.sqlite NODE_ENV=test tsx tests/smoke.ts",
+    "test:screens": "tsx tests/web-smoke.tsx",
+    "typecheck": "tsc -p tsconfig.check.json --noEmit && tsc -p tsconfig.tests.json --noEmit",
+    "clean": "rm -rf node_modules app/web/node_modules backend/node_modules */dist app/web/dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

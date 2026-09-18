@@ -1,0 +1,40 @@
+# XAMOTO — application mobile (Flutter / Dart), §34 et §48 du cahier des charges.
+#
+# L'application est un client : elle lit le véhicule par l'OBD, elle parle au
+# serveur XAMOTO, et elle fonctionne hors ligne. Aucune conclusion de diagnostic
+# n'est calculée ici en dehors des règles embarquées dans le serveur : le mobile
+# affiche, explique et garde la trace.
+name: xamoto_mobile
+description: XAMOTO — Connaître sa voiture. Application mobile (Flutter).
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  # Versions indicatives : à rafraîchir avec `flutter pub upgrade` sur un poste
+  # disposant du SDK. Ce dépôt n'a pas pu exécuter `flutter pub get` (voir README).
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.19.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.0
+  provider: ^6.1.2
+  sqflite: ^2.3.3
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  shared_preferences: ^2.2.3
+  url_launcher: ^6.3.0
+  qr_flutter: ^4.1.0
+  pdf: ^3.11.0
+  printing: ^5.13.0
+  connectivity_plus: ^6.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
