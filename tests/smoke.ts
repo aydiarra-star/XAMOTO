@@ -418,6 +418,116 @@ async function main(): Promise<void> {
   });
   check('Partage refusé sans consentement', shareWithoutConsent.statusCode === 400, `HTTP ${shareWithoutConsent.statusCode}`);
 
+  /* ── 10 bis. Devis : ce que le garage a écrit, et rien de plus ─────────── */
+  // Le devis est le document où il est le plus tentant d'inventer : un prix, un
+  // « c'est cher », une pièce non mesurée. Ces contrôles vérifient l'inverse.
+  const quoteWithAmount = await app.inject({
+    method: 'POST',
+    url: '/api/quotes',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      garageId: garages.json().garages[0].id,
+      diagnosticSessionId: diagnosticId,
+      title: 'Contrôle e2e',
+      status: 'received',
+      lines: [
+        { label: 'Poste fondé sur une mesure', quantity: 1, unitAmount: 30000, currency: 'XOF' },
+        { label: 'Poste hors périmètre OBD', quantity: 1, unitAmount: 20000, currency: 'XOF' },
+      ],
+    },
+  });
+  check('Devis enregistré tel que le garage l’a écrit', quoteWithAmount.statusCode === 201, `HTTP ${quoteWithAmount.statusCode}`);
+  const createdQuote = quoteWithAmount.json().quote as { id: string; lines: unknown[] } | null;
+  check(
+    'Le devis créé est renvoyé complet',
+    quoteWithAmount.json().id === createdQuote?.id && Array.isArray(createdQuote?.lines),
+    `lignes : ${createdQuote?.lines?.length ?? 0}`,
+  );
+  const createdQuoteId = createdQuote?.id;
+
+  const quoteWithoutAmount = await app.inject({
+    method: 'POST',
+    url: '/api/quotes',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      garageId: garages.json().garages[0].id,
+      title: 'Devis incomplet',
+      lines: [{ label: 'Poste sans montant', quantity: 1 }],
+    },
+  });
+  check('Ligne sans montant refusée plutôt que complétée à zéro', quoteWithoutAmount.statusCode === 400, `HTTP ${quoteWithoutAmount.statusCode}`);
+
+  const quoteAnalysis = await app.inject({ method: 'POST', url: `/api/quotes/${createdQuoteId}/analysis`, headers: auth, payload: {} });
+  const analysisBody = quoteAnalysis.json();
+  check('Analyse du devis', quoteAnalysis.statusCode === 200 && Array.isArray(analysisBody.analysis), `HTTP ${quoteAnalysis.statusCode}`);
+  check(
+    'Analyse : chaque poste classé soutenu par une mesure, ou non',
+    (analysisBody.analysis as Array<{ linkedToMeasuredData: boolean }>).every((line) => typeof line.linkedToMeasuredData === 'boolean'),
+    `${analysisBody.summary?.linesLinkedToMeasuredData ?? 0} soutenu(s), ${analysisBody.summary?.linesNotLinked ?? 0} sans lien`,
+  );
+  check(
+    'Analyse : un poste non mesuré devient une question, pas un soupçon',
+    (analysisBody.analysis as Array<{ linkedToMeasuredData: boolean; questionToAsk: string | null }>)
+      .filter((line) => !line.linkedToMeasuredData)
+      .every((line) => typeof line.questionToAsk === 'string' && line.questionToAsk.length > 0),
+    `${analysisBody.questionsFr?.length ?? 0} questions`,
+  );
+  // Les mots de jugement sont cherchés UNIQUEMENT là où ils affirment quelque
+  // chose. Le texte de XAMOTO contient volontairement « un devis sans lien avec
+  // les données n'est pas forcément injustifié » : c'est la phrase inverse d'un
+  // jugement, et un simple `includes()` la prendrait pour un délit.
+  const analysisText = JSON.stringify(analysisBody).toLowerCase();
+  const negation = ['pas', 'aucun', 'jamais', 'ni ', 'sans'];
+  const judgements = ['cher', 'anormal', 'injustifié', 'arnaque', 'trop élevé', 'excessif'];
+  const assertedJudgements = judgements.filter((word) => {
+    let index = analysisText.indexOf(word);
+    while (index !== -1) {
+      const before = analysisText.slice(Math.max(0, index - 40), index);
+      if (!negation.some((marker) => before.includes(marker))) return true;
+      index = analysisText.indexOf(word, index + 1);
+    }
+    return false;
+  });
+  check('Analyse : aucun jugement de prix affirmé', assertedJudgements.length === 0, assertedJudgements.join(', '));
+  check('Analyse : la mention d’origine des données est portée', typeof analysisBody.summary?.dataOrigin === 'string', String(analysisBody.summary?.dataOrigin));
+  check(
+    'Devis sans lien mesuré : dite comme telle, jamais comme une faute',
+    !analysisText.includes('faute') && !analysisText.includes('tromperie'),
+    '',
+  );
+
+  const quoteOnlyGarage = await app.inject({
+    method: 'POST',
+    url: '/api/quotes',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      garageId: garages.json().garages[0].id,
+      title: 'Devis hors diagnostic',
+      lines: [{ label: 'Vidange moteur et filtres', quantity: 1, unitAmount: 25000, currency: 'XOF' }],
+    },
+  });
+  const noLinkAnalysis = await app.inject({ method: 'POST', url: `/api/quotes/${quoteOnlyGarage.json().quote?.id}/analysis`, headers: auth, payload: {} });
+  check(
+    'Devis sans diagnostic lié analysé sans erreur',
+    noLinkAnalysis.statusCode === 200 && noLinkAnalysis.json().summary?.linesLinkedToMeasuredData === 0,
+    `HTTP ${noLinkAnalysis.statusCode} — ${noLinkAnalysis.json().summary?.linesLinkedToMeasuredData} lié(s)`,
+  );
+
+  const demoQuotes = await app.inject({ method: 'GET', url: `/api/quotes?vehicleId=${firstVehicle?.id}`, headers: auth });
+  check(
+    'Le compte de démonstration contient un devis à confronter',
+    demoQuotes.statusCode === 200 && demoQuotes.json().quotes.length >= 1,
+    `${demoQuotes.json().quotes?.length ?? 0} devis`,
+  );
+  check(
+    'Le devis de démonstration annonce des montants fictifs',
+    (demoQuotes.json().quotes as Array<{ factualSummary?: string }>).every((quote) => !quote.factualSummary || quote.factualSummary.includes('fictif') || quote.factualSummary.includes('fictifs')),
+    '',
+  );
+
   const syncPush = await app.inject({
     method: 'POST',
     url: '/api/sync/push',

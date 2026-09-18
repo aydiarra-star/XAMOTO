@@ -139,8 +139,19 @@ syntaxe est vérifiée par rapport à la grammaire PostgreSQL réelle.
 | Définitions d'entretien | 14 |
 | Tests guidés | documentés, avec 2 tests de repli |
 
-Le compte de démonstration (`demo@xamoto.app`) contient 3 véhicules et 3 scans
-simulés, tous étiquetés MODE SIMULATION.
+Le compte de démonstration (`demo@xamoto.app`) contient 3 véhicules, 3 scans simulés
+(tous étiquetés MODE SIMULATION) et **un devis par véhicule diagnostiqué**. Les postes
+de ces devis sont repris des pièces réellement citées par le diagnostic du véhicule :
+l'analyse factuelle a donc quelque chose de vrai à confronter. Leurs montants sont
+annoncés comme **fictifs** dans le résumé du devis, et un test de bout en bout vérifie
+que cette mention reste présente.
+
+Deux points de modélisation sur `quotes` :
+
+- la table ne porte **pas** de colonne devise : chaque ligne du devis porte la sienne
+  (`currency`), telle que le garage l'a écrite ;
+- `title` est un libellé interne de classement : il est exigé à la création mais
+  **jamais exposé** en lecture, parce que ce n'est pas une information du garage.
 
 ## 6. Sauvegarde et reprise
 

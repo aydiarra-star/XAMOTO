@@ -5,7 +5,7 @@
 ```
                         ┌─────────────────────────────┐
    Navigateur / PWA ───►│  app/web  (React + Vite)    │
-                        │  16 écrans, hors ligne (§22)│
+                        │  17 écrans, hors ligne (§22)│
                         └──────────────┬──────────────┘
                                        │ HTTP /api (URL relatives)
                                        ▼
@@ -88,7 +88,7 @@ phrase qui mentionne une donnée absente du pack est rejetée (voir
 XAMOTO/
 ├─ app/
 │  ├─ mobile/                  # Flutter (V2) — même API, même moteur
-│  └─ web/                     # PWA React : 16 écrans + service worker
+│  └─ web/                     # PWA React : 17 écrans + service worker
 ├─ backend/
 │  ├─ src/auth/                # jetons, permissions, consentement
 │  ├─ src/routes/              # surface HTTP (Zod à l'entrée)

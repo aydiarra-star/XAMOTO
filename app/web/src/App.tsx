@@ -18,6 +18,7 @@ import MaintenanceScreen from './screens/Maintenance';
 import InspectionScreen from './screens/Inspection';
 import ReportScreen from './screens/Report';
 import GaragesScreen from './screens/Garages';
+import QuotesScreen from './screens/Quotes';
 import AlertsScreen from './screens/Alerts';
 
 export default function App(): JSX.Element {
@@ -80,6 +81,7 @@ export default function App(): JSX.Element {
           <NavLink to="/maintenance">🗓️ {t('Entretien', 'Maintenance')}</NavLink>
           <NavLink to="/alerts">🔔 {t('Alertes', 'Alerts')}</NavLink>
           <NavLink to="/garages">🧰 {t('Garages', 'Garages')}</NavLink>
+          <NavLink to="/quotes">🧾 {t('Devis', 'Quotes')}</NavLink>
         </nav>
 
         <div className="spacer" />
@@ -144,6 +146,7 @@ export default function App(): JSX.Element {
             <Route path="/inspection" element={<InspectionScreen />} />
             <Route path="/reports/:id" element={<ReportScreen />} />
             <Route path="/garages" element={<GaragesScreen />} />
+            <Route path="/quotes" element={<QuotesScreen />} />
             <Route path="/alerts" element={<AlertsScreen />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -51,7 +51,7 @@ Deux interdits structurants :
 | Application mobile Flutter | API complète et stable ; moteur identique côté serveur |
 | Bluetooth OBD | Contrat `ObdTransport` à implémenter, `adapterRegistry` prêt |
 | Inspection avant achat approfondie | `engine/inspection.ts` + `screens/Inspection.tsx` livrés en V1 |
-| Devis et analyse factuelle | `routes/garages.ts` (`/api/quotes`, analyse) |
+| Devis et analyse factuelle | **déjà livré côté web** : `screens/Quotes.tsx` ; reste la saisie depuis le mobile et l'envoi par le garage |
 | Graphe de pièces étendu | `parts` + `part_compatibility` |
 | Multilingue complet (wolof) | Libellés `fr`/`en` + repères `wo` dans `shared/` et `i18n.tsx` |
 | Mode flotte | Table `organizations`, permissions par véhicule |
@@ -73,9 +73,23 @@ Deux interdits structurants :
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
 | Tests unitaires | `npm test` | 189/189 |
-| Bout en bout API | `npm run test:e2e` | 53/53 |
-| Rendu des écrans | `npm run test:screens` | 22/22 (16 écrans + 6 contrôles de langue) |
+| Bout en bout API | `npm run test:e2e` | 65/65 |
+| Rendu des écrans | `npm run test:screens` | 23/23 (17 écrans + 6 contrôles de langue) |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+La **phase 6** a rendu le devis (§27) utilisable depuis le web. `routes/garages.ts`
+exposait déjà `POST /api/quotes` et son analyse factuelle, mais aucun écran ne s'en
+servait : le devis était une fonctionnalité sans porte d'entrée. L'écran `Devis`
+suit trois règles qui expliquent chacun de ses détails — **aucun montant n'est
+saisi à la place du garage** (une ligne sans montant bloque l'enregistrement : un
+« 0 » deviendrait un prix, donc une donnée inventée, §47-1), **aucun jugement de
+valeur** (ni « cher », ni « anormal » : seulement ce qui rejoint une donnée mesurée
+et les questions à poser), et **un devis sans lien mesuré n'est pas une faute**
+(le rappel est affiché avec l'analyse, pas caché). Le compte de démonstration reçoit
+un devis par véhicule diagnostiqué, dont les postes sont repris des pièces réellement
+citées par le diagnostic de ce véhicule, et dont les montants sont annoncés comme
+fictifs. `POST /api/quotes` renvoie désormais le devis créé, sérialisé par la même
+fonction que la liste, pour que les deux réponses ne puissent plus diverger.
 
 La **phase 5** a préparé l'application mobile Flutter (§34, §48) : couche OBD locale
 (transport, ELM327, PID, codes défaut), stockage SQLite et file de synchronisation,

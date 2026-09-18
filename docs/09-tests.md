@@ -73,7 +73,7 @@ inexistantes.
 npm run test:e2e
 ```
 
-53 vérifications, sur une base neuve :
+65 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
@@ -88,6 +88,7 @@ npm run test:e2e
 | 21–24 | Rapport | Génération, QR code, sources limitées à celles utilisées, lecture par jeton |
 | 25–27 | Assistant | Réponse tracée, refus hors sujet, **code non documenté → « Je ne dispose pas de cette donnée »** |
 | 28–30 | Garages | Annuaire, partage avec consentement (201), refus sans consentement (400) |
+| 30 bis | Devis (§27) | Le devis est enregistré **tel que le garage l'a écrit** ; une ligne sans montant est **refusée** (400) au lieu d'être complétée par un `0` ; le devis créé est renvoyé complet ; l'analyse classe chaque poste en « soutenu par une mesure » ou non ; un poste non mesuré produit une **question**, jamais un soupçon ; les mots de jugement de prix n'apparaissent que sous forme niée ; un devis hors diagnostic s'analyse sans erreur (`0` poste lié) ; le compte de démonstration contient un devis dont les montants sont annoncés **fictifs** |
 | 31 | Synchronisation hors ligne | Idempotence (`duplicates`) |
 | 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
 | 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
@@ -108,7 +109,7 @@ plausible.
 npx tsx tests/web-smoke.tsx
 ```
 
-Rend les 16 écrans sans navigateur, dans le cas le plus défavorable : aucun véhicule,
+Rend les 17 écrans sans navigateur, dans le cas le plus défavorable : aucun véhicule,
 aucune donnée chargée, aucune interaction. Objectif : garantir qu'un écran ne plante
 jamais au premier affichage (imports, contextes, accès à des données absentes).
 
@@ -124,7 +125,7 @@ l'utilisateur verrait réellement :
 | Libellé non critique | ⚪ AMUL s'affiche bien en wolof (le repli n'est pas généralisé) |
 | Cohérence des replis | `labelText()` renvoie le français pour la sécurité et le wolof pour les libellés relus |
 
-Total : **22/22 vérifications**.
+Total : **23/23 vérifications**.
 
 ## 5. Construction de l'application
 

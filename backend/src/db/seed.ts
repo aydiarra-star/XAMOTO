@@ -11,7 +11,7 @@
  */
 import { ALL_DTC_KNOWLEDGE, KNOWLEDGE_SOURCES } from '@xamoto/diagnostic';
 import { RAG_DOCUMENTS } from '@xamoto/ai';
-import { all, get, id, now, run, transaction, type Row } from './index.js';
+import { all, get, id, jsonParse, now, run, transaction, type Row } from './index.js';
 import { GARAGES, PARTS, VEHICLE_SPECS } from './seed-data.js';
 import { createUser, hashPassword } from '../auth/index.js';
 
@@ -254,6 +254,8 @@ export async function seedDemo(): Promise<{ userId: string; vehicleIds: string[]
 
   const vehicleIds: string[] = [];
   const scanIds: string[] = [];
+  /** Véhicule propriétaire de chaque scan, dans le même ordre que `scanIds`. */
+  const scanVehicles: string[] = [];
   for (const vehicle of vehicles) {
     const vehicleId = id('veh');
     run(
@@ -311,9 +313,67 @@ export async function seedDemo(): Promise<{ userId: string; vehicleIds: string[]
         symptoms: scan.symptoms.map((key) => ({ key: key as never, present: true, intensity: 'moderate' as const })),
       });
       scanIds.push(outcome.diagnosticSessionId);
+      scanVehicles.push(vehicleIds[scan.vehicleIndex] as string);
     } catch (error) {
       console.warn('[xamoto][seed] scan de démonstration ignoré :', (error as Error).message);
     }
+  }
+
+  /*
+   * Un devis de démonstration PAR véhicule diagnostiqué.
+   *
+   * Trois raisons de les amorcer :
+   *   1. sans devis, l'écran « Devis » (§27) est vide en mode découverte, et un
+   *      écran vide n'apprend rien au lecteur ;
+   *   2. les postes viennent des pièces réellement citées par le diagnostic du
+   *      véhicule : l'analyse a donc quelque chose de vrai à confronter ;
+   *   3. l'écran est accessible depuis n'importe quel véhicule sélectionné.
+   *
+   * Les montants sont explicitement annoncés comme fictifs : un prix inventé qui
+   * passerait pour réel serait exactement ce que le §47-1 interdit.
+   */
+  const garage = get<Row>('SELECT id, name FROM garages ORDER BY name LIMIT 1');
+
+  if (garage) {
+    scanIds.forEach((scanId, index) => {
+      const vehicleId = scanVehicles[index];
+      if (!vehicleId) return;
+
+      const citedParts = all<Row>('SELECT parts FROM hypotheses WHERE session_id = ? ORDER BY score DESC LIMIT 2', [scanId])
+        .flatMap((row) => jsonParse<string[]>(row.parts, []))
+        .map((part) => part.replace(/_/g, ' '))
+        .slice(0, 2);
+
+      const lines = [
+        ...citedParts.map((label) => ({ label, quantity: 1, unitAmount: 45000, currency: 'XOF' })),
+        // Un poste que l'OBD ne peut PAS relier à une mesure : c'est le cas le
+        // plus utile à montrer, puisqu'il déclenche une question à poser au
+        // garage au lieu d'un soupçon.
+        { label: 'Vidange moteur et filtres', quantity: 1, unitAmount: 25000, currency: 'XOF' },
+        { label: 'Main-d’œuvre (2 h)', quantity: 2, unitAmount: 10000, currency: 'XOF' },
+      ];
+
+      run(
+        // Pas de colonne `currency` dans la table : la devise est portée par
+        // chaque ligne du devis, telle que le garage l'a écrite.
+        `INSERT INTO quotes (id, user_id, vehicle_id, diagnostic_session_id, garage_id, status, lines, warranty_months, delay_days, factual_summary, requested_at, received_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [
+          id('quote'),
+          user.id,
+          vehicleId,
+          scanId,
+          String(garage.id),
+          'received',
+          JSON.stringify(lines),
+          3,
+          2,
+          'Devis de démonstration : les montants sont fictifs et servent uniquement à montrer l’analyse factuelle. Aucun prix réel n’est suggéré.',
+          now(),
+          now(),
+        ],
+      );
+    });
   }
 
   return { userId: user.id, vehicleIds, scanIds };

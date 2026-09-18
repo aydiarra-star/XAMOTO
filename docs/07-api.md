@@ -134,9 +134,9 @@ locuteur natif ne les a pas validées.
 | GET | `/api/garages?country=&city=&specialty=` | Annuaire |
 | GET | `/api/garages/:id` | Détail |
 | POST | `/api/garages/:id/share-diagnostic` | Transmettre un diagnostic (`consent: true` obligatoire) |
-| POST | `/api/quotes` | Enregistrer un devis reçu |
-| POST | `/api/quotes/:id/analysis` | Analyse factuelle : lignes liées ou non à des données mesurées, questions à poser |
-| GET | `/api/quotes` | Devis enregistrés |
+| POST | `/api/quotes` | Enregistrer un devis reçu. Exige un montant par ligne : une ligne sans montant est **refusée** (400), jamais complétée par `0`. Renvoie `{ id, quote }` |
+| POST | `/api/quotes/:id/analysis` | Analyse factuelle : lignes liées ou non à des données mesurées, questions à poser, origine des données. Aucun jugement de prix |
+| GET | `/api/quotes?vehicleId=` | Devis enregistrés (le libellé interne `title` n'est pas exposé : ce n'est pas une information du garage) |
 | GET | `/api/parts?search=` | Graphe de pièces : références, équivalents, prix indicatifs |
 
 ## 9. Alertes et synchronisation (§22, §29)

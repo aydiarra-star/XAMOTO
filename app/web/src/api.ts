@@ -503,6 +503,70 @@ export interface ApiPart {
   sourceId: string;
 }
 
+/**
+ * Devis (§27).
+ *
+ * Un devis est une donnée DÉCLARÉE par un garage : XAMOTO l'enregistre, la
+ * relie aux mesures quand c'est possible, et ne porte aucun jugement de valeur.
+ * `analysis` ne dit jamais « cher » ou « injustifié » : elle dit ce qui est
+ * soutenu par une donnée mesurée, et ce qu'il reste à demander.
+ */
+export interface ApiQuoteLine {
+  label: string;
+  partReference?: string;
+  quantity: number;
+  unitAmount: number;
+  currency: string;
+}
+
+export interface ApiQuote {
+  id: string;
+  vehicleId: string;
+  garageId: string;
+  diagnosticSessionId: string | null;
+  status: 'draft' | 'requested' | 'received' | 'accepted' | 'declined';
+  lines: ApiQuoteLine[];
+  warrantyMonths: number | null;
+  delayDays: number | null;
+  factualSummary: string | null;
+  requestedAt: string | null;
+  receivedAt: string | null;
+}
+
+export interface ApiQuoteAnalysisLine {
+  label: string;
+  quantity: number;
+  unitAmount: number | null;
+  currency: string;
+  /** Vrai quand la ligne rejoint un élément réellement mesuré sur le véhicule. */
+  linkedToMeasuredData: boolean;
+  matchedElements: string[];
+  /** Question à poser au garage quand aucun lien n'a été trouvé. */
+  questionToAsk: string | null;
+}
+
+export interface ApiQuoteAnalysis {
+  quote: {
+    id: string;
+    status: string;
+    garageId: string;
+    diagnosticSessionId: string | null;
+    receivedAt: string | null;
+    warrantyMonths: number | null;
+    delayDays: number | null;
+  };
+  analysis: ApiQuoteAnalysisLine[];
+  summary: {
+    totalLines: number;
+    linesLinkedToMeasuredData: number;
+    linesNotLinked: number;
+    dataOrigin: string;
+    certainty: string;
+  };
+  noticeFr: string;
+  questionsFr: string[];
+}
+
 export interface ApiAlert {
   id: string;
   vehicleId: string | null;

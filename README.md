@@ -119,7 +119,7 @@ Trois véhicules et trois diagnostics simulés sont alors disponibles, tous éti
 ## Architecture
 
 ```
-app/web      PWA React (16 écrans, hors ligne)
+app/web      PWA React (17 écrans, hors ligne)
 app/mobile   Flutter (V2)
      │
 backend      Fastify + Zod — auth, routes, services, persistance
@@ -278,8 +278,8 @@ npm run typecheck                                     # types paquets + backend 
 npm test                                              # 189 tests unitaires
 npm run test:watch                                     # en continu
 
-npm run test:e2e                                       # 53/53 de bout en bout (API + base)
-npm run test:screens                                   # 22/22 (16 écrans + 6 contrôles de langue)
+npm run test:e2e                                       # 65/65 de bout en bout (API + base)
+npm run test:screens                                   # 23/23 (17 écrans + 6 contrôles de langue)
 npm run build                                          # interface (app/web/dist)
 ```
 
@@ -325,11 +325,13 @@ Détail complet : [docs/09-tests.md](docs/09-tests.md).
 **MVP (V1) — livré** : véhicules, scan OBD (Wi-Fi + simulateur), codes défaut, PID avec
 disponibilité explicite, moteur de diagnostic, certitude et sécurité, « puis-je
 rouler ? », tests guidés, après-réparation, seconde opinion, passeport, entretien et
-alertes, rapport partageable, assistant anti-hallucination, synchronisation hors ligne.
+alertes, rapport partageable, assistant anti-hallucination, synchronisation hors ligne,
+**devis de garage et analyse factuelle** (§27 — lisez la règle : XAMOTO ne saisit ni ne
+complète aucun montant, et un devis sans lien mesuré n'est pas présenté comme une faute).
 
 **V2** : application mobile Flutter, Bluetooth OBD, inspection avant achat approfondie,
-devis et analyse factuelle, graphe de pièces étendu, multilingue complet (wolof), mode
-flotte.
+devis envoyés par le garage et devis comparés, graphe de pièces étendu, multilingue
+complet (wolof), mode flotte.
 
 **V3** : maintenance prédictive (tendances mesurées, jamais des prédictions de panne),
 réseau de garages partenaires, diagnostic à distance assisté, apprentissage à partir de

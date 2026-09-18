@@ -11,6 +11,28 @@ import { all, audit, get, id, jsonParse, now, run, type Row } from '../db/index.
 import { assertVehicleAccess, authenticate, type AuthUser } from '../auth/index.js';
 import { loadContextAndResult } from './diagnostic.js';
 
+/**
+ * Sérialisation d'un devis, définie à UN SEUL endroit : la liste et la réponse
+ * de création doivent décrire le même objet, sinon le client reçoit deux formes
+ * différentes selon l'appel. `title` n'est volontairement pas exposé : c'est un
+ * libellé interne de classement, pas une information du garage.
+ */
+function serializeQuote(row: Row): Record<string, unknown> {
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    garageId: row.garage_id,
+    diagnosticSessionId: row.diagnostic_session_id,
+    status: row.status,
+    lines: jsonParse<unknown[]>(row.lines, []),
+    warrantyMonths: row.warranty_months,
+    delayDays: row.delay_days,
+    factualSummary: row.factual_summary,
+    requestedAt: row.requested_at,
+    receivedAt: row.received_at,
+  };
+}
+
 function garageWithDistance(row: Row, lat?: number, lon?: number): Record<string, unknown> {
   const base = {
     id: row.id,
@@ -193,7 +215,8 @@ export async function garageRoutes(app: FastifyInstance): Promise<void> {
         data.status === 'received' ? now() : null,
       ],
     );
-    return reply.code(201).send({ id: quoteId });
+    const created = get<Row>('SELECT * FROM quotes WHERE id = ?', [quoteId]);
+    return reply.code(201).send({ id: quoteId, quote: created ? serializeQuote(created) : null });
   });
 
   /**
@@ -278,19 +301,7 @@ export async function garageRoutes(app: FastifyInstance): Promise<void> {
       ? (assertVehicleAccess(query.vehicleId, user), all<Row>('SELECT * FROM quotes WHERE vehicle_id = ? ORDER BY requested_at DESC', [query.vehicleId]))
       : all<Row>('SELECT * FROM quotes WHERE user_id = ? ORDER BY requested_at DESC LIMIT 100', [user.id]);
     return reply.send({
-      quotes: rows.map((row) => ({
-        id: row.id,
-        vehicleId: row.vehicle_id,
-        garageId: row.garage_id,
-        diagnosticSessionId: row.diagnostic_session_id,
-        status: row.status,
-        lines: jsonParse<unknown[]>(row.lines, []),
-        warrantyMonths: row.warranty_months,
-        delayDays: row.delay_days,
-        factualSummary: row.factual_summary,
-        requestedAt: row.requested_at,
-        receivedAt: row.received_at,
-      })),
+      quotes: rows.map(serializeQuote),
     });
   });
 

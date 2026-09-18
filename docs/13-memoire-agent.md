@@ -5,7 +5,7 @@ travail**. Il existe pour qu'une session suivante (agent ou humain) reprenne le
 projet exactement là où il en est, sans refaire ce qui a été fait ni défaire ce qui
 a été décidé.
 
-Dernière mise à jour : phase 5 (application mobile préparée).
+Dernière mise à jour : phase 6 (écran devis web).
 
 ---
 
@@ -20,6 +20,7 @@ Dernière mise à jour : phase 5 (application mobile préparée).
 | 4 | Base documentaire sourcée + règles par système + couverture OBD (15 systèmes) | ✅ livrée |
 | 4 bis | Scénario de freinage simulé, contrat de routes | ✅ livrée |
 | 5 | **Application mobile Flutter** (code écrit, non compilé ici) + mémoire d'agent | ✅ livrée, avec réserve |
+| 6 | **Écran devis web** (§27) + devis de démonstration + contrôles e2e du devis | ✅ livrée |
 
 ### Réserve à connaître sur la phase 5
 
@@ -40,8 +41,8 @@ SDK Dart installé — vérifié à nouveau en phase 5). Conséquence :
 ```bash
 npm install                       # obligatoire après une remise à zéro de l'espace de travail
 npm test                          # 189 vérifications, 11 suites
-npm run test:e2e                  # 53 vérifications de bout en bout (API + base)
-npm run test:screens              # 22 rendus d'écran (16 écrans + 6 contrôles de langue)
+npm run test:e2e                  # 65 vérifications de bout en bout (API + base)
+npm run test:screens              # 23 rendus d'écran (17 écrans + 6 contrôles de langue)
 npm run typecheck                 # 0 erreur attendue
 npm run build                     # app/web/dist — ~290 kB
 npm run seed:sql                  # régénère database/seed/001_knowledge.sql
@@ -66,6 +67,18 @@ le web et sur le téléphone. Le mode `local` **refuse** :
 - une origine `simulated` — le simulateur vit sur le serveur (§47-2) ;
 - un PID que XAMOTO ne sait pas lire — il n'existe pas de « case vide » en base ;
 - un scan entièrement vide — mieux vaut une erreur qu'un « tout va bien » sans preuve.
+
+### Un devis incomplet reste incomplet
+
+L'écran devis (§27, phase 6) empêche l'enregistrement dès qu'une ligne porte un
+libellé **sans montant** : le champ reste vide et bloque la validation. Enregistrer
+un `0` par défaut aurait fabriqué un prix — exactement la donnée inventée que le
+§47-1 interdit. Pour la même raison, l'écran n'affiche **aucun total « normal »**,
+aucune fourchette de prix et aucun classement : il dit seulement quelles lignes
+rejoignent une donnée mesurée sur le véhicule, et quelles questions poser au garage.
+Le devis de démonstration suit la même règle : ses postes viennent des pièces
+réellement citées par le diagnostic du véhicule, et son résumé annonce que les
+montants sont **fictifs**.
 
 ### Le wolof ne se traduit pas automatiquement
 
@@ -102,6 +115,8 @@ affiché **avant** le diagnostic, côté web comme côté mobile.
 | La liste des scénarios acceptés était recopiée dans la route de scan | Mise à jour du simulateur | Dérivée de `SCENARIOS` |
 | `database/seed/001_knowledge.sql` avait divergé du code | `seedSql.test.ts` | Fichier généré + test d'égalité |
 | 55 pièces du code absentes de `002_reference.sql` | `seedSql.test.ts` | Ajoutées |
+| `POST /api/quotes` ne renvoyait que `{ id }` là où l'analyse renvoie le devis | Contrôle e2e du devis | Le devis créé est renvoyé, sérialisé par la **même** fonction que la liste (`serializeQuote`) |
+| `POST /api/quotes` répondait 404 à l'analyse juste après sa création | Contrôle e2e (l'identifiant n'était pas lu au bon endroit) | Corrigé en même temps que le défaut ci-dessus |
 
 ---
 
@@ -119,7 +134,10 @@ affiché **avant** le diagnostic, côté web comme côté mobile.
 6. Après toute modification de connaissances : `npm run seed:sql` **en dernier**.
 7. Après toute modification du catalogue wolof : `npm run mobile:i18n`.
 8. Une fonctionnalité n'est « livrée » que si les cinq commandes du § 2 passent.
-9. Les phrases de sécurité sont **littérales** ; elles sont dupliquées à l'identique
+9. Un montant est toujours porté par une **ligne** de devis (`currency` par ligne) ;
+   la table `quotes` n'a pas de colonne devise, et une ligne sans montant est refusée
+   plutôt que complétée par un zéro.
+10. Les phrases de sécurité sont **littérales** ; elles sont dupliquées à l'identique
    côté mobile et un test compare les deux copies à `shared/src/index.ts`.
 
 ---
@@ -133,8 +151,9 @@ affiché **avant** le diagnostic, côté web comme côté mobile.
 | Pilote Bluetooth Android/iOS | contrat fourni (`lib/obd/bluetooth_driver.dart`), implémentation à écrire |
 | Notifications d'entretien | V2, dépend du natif |
 | Photos et documents du véhicule | V2 |
-| Devis et devis comparés côté mobile | l'API existe (`/api/quotes`), l'écran reste à faire |
-| Mode hors ligne complet côté web (Service Worker) | partiel : file d'attente côté serveur, à étendre |
+| Devis côté mobile | l'écran web est livré (phase 6) ; l'écran Flutter reste à écrire |
+| Devis envoyés par le garage et devis comparés | V2 : une place de marché exige un cadre contractuel |
+| Mode hors ligne du web | le Service Worker existe (`app/web/public/sw.js`) : coquille en cache, `/api` **jamais** caché (une mesure ancienne ne doit pas passer pour actuelle). Reste : file d'attente d'écriture côté client |
 
 ---
 

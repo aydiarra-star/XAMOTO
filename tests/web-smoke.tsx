@@ -30,6 +30,7 @@ import MaintenanceScreen from '../app/web/src/screens/Maintenance';
 import InspectionScreen from '../app/web/src/screens/Inspection';
 import ReportScreen from '../app/web/src/screens/Report';
 import GaragesScreen from '../app/web/src/screens/Garages';
+import QuotesScreen from '../app/web/src/screens/Quotes';
 import AlertsScreen from '../app/web/src/screens/Alerts';
 
 /* ── Environnement minimal (pas de navigateur disponible) ─────────────────── */
@@ -61,6 +62,7 @@ const screens: Array<[string, ComponentType]> = [
   ['Inspection', InspectionScreen],
   ['Report', ReportScreen],
   ['Garages', GaragesScreen],
+  ['Quotes', QuotesScreen],
   ['Alerts', AlertsScreen],
 ];
 
