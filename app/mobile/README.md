@@ -1,81 +1,129 @@
-# XAMOTO Mobile (Flutter) — V2
+# XAMOTO Mobile (Flutter/Dart)
 
-Ce dossier accueillera l'application mobile Flutter. Le périmètre est **volontairement
-vide en V1** : la PWA (`app/web`) couvre le besoin et fonctionne déjà hors ligne sur
-téléphone. Aucun code mobile n'est écrit avant que la V1 soit stable (§49, §50).
+Application mobile de XAMOTO : lire le véhicule par Bluetooth, travailler hors ligne,
+et afficher les conclusions du **même** moteur de diagnostic que le web.
 
-## Ce que l'application mobile apportera
+## ⚠️ Statut : code écrit, non compilé ici
 
-| Fonctionnalité | Pourquoi elle nécessite le natif |
-| --- | --- |
-| **Adaptateurs OBD Bluetooth** (SPP et BLE) | Un navigateur n'accède pas aux boîtiers Bluetooth série ; Flutter le permet |
-| **Mode hors ligne complet** | Base SQLite locale, synchronisation différée (`/api/sync/push`, `/api/sync/pull`) |
-| **Notifications** | Échéances d'entretien et alertes, même application fermée |
-| **Photo et documents** | Carte grise, assurance, factures, photos du véhicule |
-| **Wolof et français** | Interface complète dans les deux langues |
+Ce dépôt n'a **pas** pu exécuter `flutter pub get`, `flutter analyze` ni
+`flutter test` : l'environnement de développement n'a accès qu'au registre npm et à
+GitHub (vérifié : `pub.dev` et `storage.googleapis.com` injoignables, aucun `dart`
+ni `flutter` installé). Le code Dart est donc **livré sans exécution**.
 
-## Ce qui ne sera PAS dupliqué
+Ce qui a été fait à la place, et qui est vérifié automatiquement :
 
-Le moteur de diagnostic, la base de connaissances, l'assistant et la validation restent
-**côté serveur**. L'application mobile ne calcule aucune conclusion : elle appelle les
-mêmes routes que la PWA (`docs/07-api.md`) et affiche les mêmes niveaux de certitude et
-de sécurité.
+| Vérification | Où | Ce qu'elle attrape |
+| --- | --- | --- |
+| **Contrat de routes** | `npm run test:e2e` | Un chemin ou un verbe HTTP appelé par le mobile qui n'existe pas côté serveur (a déjà trouvé `GET /api/knowledge/dtc/:code`, inexistant, et l'usage de `POST` là où la synchronisation attend `GET`) |
+| **Phrases exigées** | `npm test` | Une phrase du §16 reformulée sur mobile → refus |
+| **Écrans** | `npm test` | Un écran déclaré dans `routes.dart` sans fichier, ou non branché dans `app.dart` |
+| **Catalogue wolof** | `npm test` | Un mot wolof recopié à la main, ou un catalogue embarqué différent de `shared/src/i18n.ts` |
+| **Scénarios simulés** | `npm test` | Un scénario proposé sur mobile que le serveur ne connaît pas |
+
+**Ce qui reste à faire sur un poste avec SDK** — dans cet ordre :
+
+```bash
+cd app/mobile
+flutter pub get
+flutter analyze          # les règles sont dans analysis_options.yaml
+flutter test             # test/ contient les vérifications de logique pure
+flutter run              # sur un appareil avec adaptateur ELM327
+```
+
+Tant que ces quatre commandes n'ont pas tourné, le code mobile est **proposé**, pas
+livré. Aucun écran ne doit être considéré comme vérifié avant.
+
+## Architecture
 
 ```
-Flutter (app/mobile)
-   ├─ obd_bluetooth/   → transport Bluetooth, implémente le contrat ObdTransport
-   ├─ offline/         → SQLite local + file de synchronisation
-   └─ ui/              → mêmes écrans, mêmes libellés, mêmes messages de prudence
-              │
-              ▼
-        API XAMOTO (backend/) — moteur inchangé
+lib/
+├── api/            # client HTTP, points d'entrée, modèles (lecture seule du serveur)
+├── core/           # niveaux (§10, §11), provenance (§33), phrases exigées (§16), formatage
+├── obd/            # couche OBD locale : transport, ELM327, PID, DTC, session, simulateur
+├── storage/        # SQLite local : véhicules, scans, diagnostics, file d'attente
+├── state/          # état applicatif partagé + synchronisation
+├── i18n/           # textes fr/en + catalogue wolof GÉNÉRÉ
+└── screens/        # 12 écrans
 ```
 
-## Pilote Bluetooth à fournir (contrat)
+### La frontière qui compte (§7, §9)
 
-La couche Bluetooth côté serveur/moteur est **déjà écrite et testée**
-(`obd/src/adapters/bluetoothTransport.ts`, voir `docs/03-obd.md` § 5). Ce qui manque
-au navigateur, c'est le matériel : seul le natif peut ouvrir une liaison Bluetooth.
-L'application mobile n'a donc qu'**un seul objet** à fournir, exactement calqué sur
-`BluetoothDriver` :
+```
+Téléphone                                  Serveur
+─────────                                  ───────
+adaptateur ELM327  →  lecture OBD     ─┐
+décodage PID / DTC (normes J1979/J2012) │  mesures brutes + provenance
+                                        └──────────────►  moteur de règles
+                                                          base de connaissances
+                                                          assistant (RAG)
+                                        ◄──────────────  conclusion + niveaux
+```
+
+**Aucune règle de diagnostic n'est recopiée dans le mobile.** C'est ce qui garantit
+qu'un même véhicule donne la même conclusion sur le web et sur le téléphone. Le mode
+`local` de `POST /api/scans` matérialise cette frontière : le téléphone envoie ses
+mesures, le serveur calcule, et le serveur **refuse** une mesure marquée `simulated`
+(le simulateur vit sur le serveur — §30, §47-2).
+
+Un scan local vide est également refusé : mieux vaut une erreur explicite qu'un
+« tout va bien » sans fondement.
+
+## Le pilote Bluetooth : le seul travail proprement natif
+
+Dart ne sait pas ouvrir une liaison série SPP/BLE : cela dépend de la plateforme.
+`lib/obd/bluetooth_driver.dart` définit le contrat que chaque plateforme implémente,
+et rien d'autre dans l'application ne le connaît.
 
 ```dart
-abstract class BluetoothDriver {
+abstract interface class BluetoothDriver {
   String get id;
-  String get label;
-  List<String> get kinds;                 // ['spp', 'ble']
-  bool available();
-  Future<List<BluetoothDeviceInfo>> list();          // nom, adresse, appairé, services
-  Future<BluetoothLink> open(String address, {String kind});
-}
-
-abstract class BluetoothLink {
-  Future<void> write(String data);                   // commande ELM327 + '
-'
-  void onData(void Function(String chunk) handler);  // octets reçus, par morceaux
-  Future<void> close();
-  bool isOpen();
+  bool get isAvailable;
+  String get unavailableReasonFr;      // dit POURQUOI, à l'utilisateur
+  String get unavailableReasonEn;
+  Future<List<BluetoothDeviceInfo>> listDevices({BluetoothKind? kind});
+  Future<BluetoothConnection> open(BluetoothDeviceInfo device, {int baudRate});
 }
 ```
 
-C'est le seul travail proprement mobile : le transport assemble ensuite lui-même les
-fragments, retire l'écho, attend le marqueur `>` et applique le délai. Les protocoles
-(ELM327, J1979, J2012) et tout le moteur de diagnostic s'appliquent **sans
-modification** : c'est exactement l'objet du découplage imposé par le §7.
+Le dépôt fournit volontairement un pilote **absent** (`_NoPlatformDriver`) qui
+s'annonce comme tel : c'est la vérité de ce dépôt, et cela évite qu'un écran affiche
+« aucun appareil trouvé » alors qu'aucun pilote n'existe.
 
-Deux règles héritées de la couche déjà écrite, à ne pas contourner :
+Règles héritées de la couche serveur, à ne pas contourner :
 
-- si un pilote n'est pas disponible, `list()` doit lever ou renvoyer une liste vide —
-  **jamais** une liste d'appareils inventée ;
-- un appareil dont le nom ressemble à un adaptateur OBD reste `likelyObdAdapter`
-  (présomption) jusqu'à ce que `ATZ` / `ATI` répondent.
+- un pilote indisponible renvoie une liste **vide** et l'explique — jamais une liste
+  d'appareils inventée ;
+- un nom qui ressemble à un adaptateur reste une **présomption** (`looksLikeObdAdapter`)
+  tant qu'un `ATZ` n'a pas répondu ;
+- `NO DATA`, `UNABLE TO CONNECT`, `BUS INIT: ERROR` sont des **réponses**, pas des
+  valeurs : elles signifient « je ne sais pas », jamais « 0 ».
 
-## Prérequis avant de commencer
+## Hors ligne (§32)
 
-1. La couche Bluetooth serveur est validée (`obd/test/bluetooth.test.ts`, 32 tests) et
-   la PWA reste verte (`npm test`, `npm run test:e2e` → 37/37, `npm run test:screens`
-   → 22/22, dont 6 contrôles de langue).
-2. L'API est stable et versionnée.
-3. Le modèle de synchronisation hors ligne est éprouvé sur la PWA.
-4. Un boîtier Bluetooth de référence a été testé manuellement, avec deux véhicules
-   différents.
+L'application écrit toujours en local d'abord, puis synchronise. Trois règles sont
+écrites dans le code, pas dans une charte :
+
+1. une **observation** de l'utilisateur n'est jamais perdue (elle reste en file
+   jusqu'à acceptation) : `ConflictPolicy.localWins` ;
+2. une **conclusion** du serveur n'est jamais écrasée par un état local :
+   `ConflictPolicy.serverWins` ;
+3. un partage en désaccord n'est pas tranché à la place de l'utilisateur :
+   `ConflictPolicy.askUser`.
+
+## Le wolof n'est pas embarqué à la main
+
+`lib/i18n/catalogue.g.dart` est **généré** depuis `shared/src/i18n.ts` :
+
+```bash
+npm run mobile:i18n      # depuis la racine du dépôt
+```
+
+Une consigne de sécurité non relue (`status != reviewed`) n'est jamais affichée en
+wolof : l'interface montre le français et l'explique. Le test de contrat échoue si le
+fichier livré n'est plus exactement celui que produit le script.
+
+## Tests Dart prévus (à exécuter avec le SDK)
+
+`test/` contient les vérifications de logique pure, celles qui ne demandent ni
+appareil ni réseau : décodage des PID, décodage des codes défaut, nettoyage des
+réponses ELM327, niveaux de certitude, file de synchronisation, catalogue wolof.

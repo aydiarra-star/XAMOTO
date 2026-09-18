@@ -7,6 +7,9 @@
  *
  * Lancement :  XAMOTO_DB_PATH=./data/smoke.sqlite npx tsx tests/smoke.ts
  */
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { buildApp } from '../backend/src/app.js';
 import { closeDb } from '../backend/src/db/index.js';
 import { DEMO_CREDENTIALS, seedStatus } from '../backend/src/db/seed.js';
@@ -23,6 +26,8 @@ function check(name: string, condition: boolean, detail = ''): void {
   results.push({ name, ok: condition, detail });
   console.log(`${condition ? '✔' : '✘'} ${name}${detail ? ` — ${detail}` : ''}`);
 }
+
+const here = dirname(fileURLToPath(import.meta.url));
 
 async function main(): Promise<void> {
   console.log('\n=== XAMOTO — test de bout en bout ===\n');
@@ -163,6 +168,159 @@ async function main(): Promise<void> {
     'Freinage : aucune hypothèse « confirmée » sur un système non lisible',
     absHypotheses.length > 0 && absHypotheses.every((hypothesis) => hypothesis.certainty !== 'confirmed'),
     absHypotheses.map((hypothesis) => hypothesis.certainty).join(', ') || 'aucune hypothèse',
+  );
+
+  /* ── 3 sexies. Mobile : la lecture se fait sur le téléphone, le calcul non ── */
+  const localScan = await app.inject({
+    method: 'POST',
+    url: '/api/scans',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      mode: 'local',
+      local: {
+        protocol: 'ISO 15765-4 (CAN 11/500)',
+        device: { id: 'elm327-ble', label: 'ELM327 v1.5 (Bluetooth)', kind: 'bluetooth' },
+        milOn: true,
+        readings: [
+          { key: 'engine_rpm', value: 780, supported: true, origin: 'measured' },
+          { key: 'coolant_temp', value: 108, supported: true, origin: 'measured' },
+          { key: 'battery_voltage', value: 12.4, supported: true, origin: 'measured' },
+          { key: 'oil_temp', value: null, supported: false },
+        ],
+        dtcs: [{ code: 'P0128', status: 'active' }, { code: 'C0035', status: 'stored' }],
+      },
+    },
+  });
+  const localBody = localScan.json();
+  check(
+    'Scan local accepté : le téléphone lit, le serveur calcule',
+    localScan.statusCode === 201 && typeof localBody.diagnosticSessionId === 'string',
+    `HTTP ${localScan.statusCode}`,
+  );
+  check(
+    'Scan local : aucune mention MODE SIMULATION et provenance mesurée',
+    localScan.statusCode === 201 && localBody.simulationNotice === null && localBody.source === 'obd',
+    `source : ${String(localBody.source)} — avis : ${String(localBody.simulationNotice)}`,
+  );
+  check(
+    'Scan local : un PID non supporté est listé, jamais remplacé par une valeur',
+    (localBody.unsupportedPids ?? []).includes('oil_temp') &&
+      (localBody.readings ?? []).every((reading: { key: string; value: number | null }) => reading.key !== 'oil_temp' || reading.value === null),
+    `${(localBody.unsupportedPids ?? []).length} PID non supportés`,
+  );
+
+  const simulatedLocally = await app.inject({
+    method: 'POST',
+    url: '/api/scans',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      mode: 'local',
+      local: { milOn: false, readings: [{ key: 'coolant_temp', value: 90, supported: true, origin: 'simulated' }], dtcs: [] },
+    },
+  });
+  const simulatedLocallyBody = simulatedLocally.body ?? '';
+  check(
+    'Une donnée simulée envoyée comme locale est refusée',
+    // Le refus est explicite : le message dit POURQUOI (le simulateur vit sur le
+    // serveur), il ne se contente pas de « champ invalide ».
+    simulatedLocally.statusCode === 400 && /simul/i.test(simulatedLocallyBody),
+    `HTTP ${simulatedLocally.statusCode}`,
+  );
+
+  const unknownPidLocally = await app.inject({
+    method: 'POST',
+    url: '/api/scans',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      mode: 'local',
+      local: { milOn: false, readings: [{ key: 'pression_pneus', value: 2.4, supported: true, origin: 'measured' }], dtcs: [] },
+    },
+  });
+  check(
+    'Un PID que XAMOTO ne sait pas lire est refusé, pas enregistré',
+    unknownPidLocally.statusCode === 400 && String(unknownPidLocally.json().error?.message ?? '').includes('PID inconnu'),
+    `HTTP ${unknownPidLocally.statusCode}`,
+  );
+
+  const emptyLocally = await app.inject({
+    method: 'POST',
+    url: '/api/scans',
+    headers: auth,
+    payload: { vehicleId: firstVehicle?.id, mode: 'local', local: { milOn: false, readings: [], dtcs: [] } },
+  });
+  check(
+    'Un scan local vide ne produit pas un « tout va bien »',
+    emptyLocally.statusCode === 400,
+    `HTTP ${emptyLocally.statusCode}`,
+  );
+
+  /* ── 3 septies. Mobile : chemins ET verbes HTTP confrontés au serveur ───── */
+  // L'application mobile (Dart) ne peut pas être compilée ici : aucun SDK n'est
+  // téléchargeable depuis cet environnement. Ce qui se vérifie SANS compilateur,
+  // en revanche, c'est son contrat avec le serveur — et c'est là que se cachent
+  // les erreurs coûteuses (route inexistante, verbe HTTP erroné). Ce contrôle a
+  // déjà trouvé deux défauts réels : `GET /api/knowledge/dtc/:code` n'existait
+  // pas, et la synchronisation utilisait POST au lieu de GET.
+  const mobileRoot = resolve(here, '../app/mobile');
+  const endpointsSource = readFileSync(resolve(mobileRoot, 'lib/api/endpoints.dart'), 'utf8');
+  const constants = new Map<string, string>();
+  for (const match of endpointsSource.matchAll(/static const String (\w+) = '(\/api\/[^']*)'/g)) {
+    constants.set(match[1]!, match[2]!);
+  }
+
+  const hasRoute = (app as unknown as { hasRoute: (route: { method: string; url: string }) => boolean }).hasRoute.bind(app);
+  const mobileCalls: Array<{ method: string; path: string; file: string }> = [];
+  const unsupportedCalls: string[] = [];
+
+  for (const file of [
+    'lib/state/app_state.dart',
+    'lib/state/sync_service.dart',
+    'lib/screens/login_screen.dart',
+    'lib/screens/vehicles_screen.dart',
+    'lib/screens/guided_tests_screen.dart',
+    'lib/screens/assistant_screen.dart',
+    'lib/screens/report_screen.dart',
+    'lib/screens/maintenance_screen.dart',
+    'lib/screens/garages_screen.dart',
+  ]) {
+    const source = readFileSync(resolve(mobileRoot, file), 'utf8');
+    // Un appel peut choisir son chemin dans une expression (`demo ? Api.demo :
+    // Api.login`) : on lit donc TOUTES les constantes citées dans la parenthèse.
+    for (const call of source.matchAll(/api\.(get|post|patch|delete)\(([\s\S]{0,240}?)\)/g)) {
+      const method = call[1]!.toUpperCase();
+      const args = call[2] ?? '';
+      for (const reference of args.matchAll(/Api\.(\w+)/g)) {
+        // Les assistants se terminent par « Path » et portent le nom de la constante.
+        const name = reference[1]!.replace(/Path$/, '');
+        const path = constants.get(name);
+        if (!path) {
+          unsupportedCalls.push(`${file}: Api.${reference[1]}`);
+          continue;
+        }
+        mobileCalls.push({ method, path, file });
+      }
+    }
+  }
+
+  const wrongCalls = mobileCalls.filter((call) => !hasRoute({ method: call.method, url: call.path }));
+  check(
+    'Application mobile : chaque appel (verbe + chemin) existe côté serveur',
+    mobileCalls.length >= 12 && wrongCalls.length === 0 && unsupportedCalls.length === 0,
+    wrongCalls.length > 0 || unsupportedCalls.length > 0
+      ? [...wrongCalls.map((call) => `${call.method} ${call.path}`), ...unsupportedCalls].join(', ')
+      : `${mobileCalls.length} appels vérifiés sur ${new Set(mobileCalls.map((call) => call.path)).size} routes`,
+  );
+
+  // Toute constante déclarée doit correspondre à une route réelle : une constante
+  // fausse mais jamais appelée est une bombe à retardement pour le prochain écran.
+  const unusedWrong = [...constants.entries()].filter(([, path]) => !hasRoute({ method: 'GET', url: path }) && !hasRoute({ method: 'POST', url: path }) && !hasRoute({ method: 'DELETE', url: path }) && !hasRoute({ method: 'PATCH', url: path }));
+  check(
+    'Application mobile : aucune constante de chemin ne pointe vers une route absente',
+    unusedWrong.length === 0,
+    unusedWrong.map(([name, path]) => `${name} → ${path}`).join(', ') || `${constants.size} constantes vérifiées`,
   );
 
   /* ── 4. Moteur : au moins une hypothèse et un test ───────────────────── */

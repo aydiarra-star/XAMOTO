@@ -1,0 +1,21 @@
+# Règles de qualité (Flutter). Elles ne remplacent pas la relecture humaine :
+# le dépôt ne dispose pas du SDK ici, donc `flutter analyze` n'a pas été exécuté.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    # Une donnée manquante ne doit jamais être remplacée par une valeur par défaut
+    # silencieuse : le code doit décider explicitement de l'affichage « non disponible ».
+    missing_return: error
+    always_declare_return_types: error
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_print
+    - prefer_final_locals
+    - unawaited_futures
+    - require_trailing_commas

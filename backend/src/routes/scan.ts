@@ -11,7 +11,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { all, get, jsonParse, type Row } from '../db/index.js';
 import { assertVehicleAccess, authenticate, type AuthUser } from '../auth/index.js';
-import { runScan } from '../services/scanService.js';
+import { ClientScanInputError, runScan } from '../services/scanService.js';
 import {
   COMMON_ELM327_HOSTS,
   COMMON_ELM327_PORTS,
@@ -29,9 +29,59 @@ import type { SimulationScenarioId } from '@xamoto/obd';
  */
 const SCENARIO_IDS = SCENARIOS.map((scenario) => scenario.id) as [string, ...string[]];
 
+/**
+ * Mesures transmises par l'application mobile (§7, §34).
+ *
+ * `origin: 'simulated'` est refusé ici, et pas seulement plus loin : le
+ * simulateur vit sur le serveur, une donnée simulée arrivant d'un téléphone ne
+ * peut pas être distinguée d'une donnée réelle par l'utilisateur (§47-1, §47-2).
+ */
+const localReadingSchema = z.object({
+  key: z.string(),
+  value: z.number().nullable(),
+  supported: z.boolean().default(true),
+  unit: z.string().nullable().optional(),
+  origin: z
+    .enum(['measured', 'documented', 'calculated', 'estimated'], {
+      errorMap: () => ({
+        message:
+          'Une donnée simulée ne peut pas venir du téléphone : le simulateur vit sur le serveur. Indiquez « measured », « calculated », « documented » ou « estimated ».',
+      }),
+    })
+    .default('measured'),
+});
+
+const localDtcSchema = z.object({
+  code: z.string().regex(/^[PCBU][0-9A-F]{4}$/, 'Code défaut invalide (attendu : P/C/B/U suivi de 4 caractères hexadécimaux).'),
+  status: z.enum(['active', 'pending', 'stored']).default('stored'),
+  occurrences: z.number().int().min(1).max(999).optional(),
+  freezeFrame: z.record(z.union([z.number(), z.string(), z.null()])).optional(),
+});
+
+const localSchema = z.object({
+  protocol: z.string().nullable().optional(),
+  device: z
+    .object({
+      id: z.string(),
+      label: z.string(),
+      kind: z.enum(['bluetooth', 'wifi']),
+      model: z.string().nullable().optional(),
+      firmware: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  milOn: z.boolean().default(false),
+  readings: z.array(localReadingSchema).max(64).default([]),
+  dtcs: z.array(localDtcSchema).max(32).default([]),
+  unsupportedPids: z.array(z.string()).max(64).optional(),
+  warnings: z.array(z.string()).max(20).optional(),
+});
+
 const scanSchema = z.object({
   vehicleId: z.string(),
-  mode: z.enum(['obd', 'simulator']).default('simulator'),
+  mode: z.enum(['obd', 'simulator', 'local']).default('simulator'),
+  /** Mode `local` : la lecture a eu lieu sur le téléphone. */
+  local: localSchema.optional(),
   scenario: z.enum(SCENARIO_IDS).optional(),
   host: z.string().optional(),
   port: z.number().int().optional(),
@@ -156,6 +206,36 @@ export async function scanRoutes(app: FastifyInstance): Promise<void> {
         vehicleId: parsed.data.vehicleId,
         mode: parsed.data.mode,
         scenario: parsed.data.scenario as SimulationScenarioId | undefined,
+        local: parsed.data.local
+          ? {
+              protocol: parsed.data.local.protocol ?? null,
+              device: parsed.data.local.device
+                ? {
+                    id: parsed.data.local.device.id,
+                    label: parsed.data.local.device.label,
+                    kind: parsed.data.local.device.kind,
+                    model: parsed.data.local.device.model ?? null,
+                    firmware: parsed.data.local.device.firmware ?? null,
+                  }
+                : null,
+              milOn: parsed.data.local.milOn,
+              readings: parsed.data.local.readings.map((reading) => ({
+                key: reading.key,
+                value: reading.value,
+                supported: reading.supported,
+                unit: reading.unit ?? null,
+                origin: reading.origin,
+              })),
+              dtcs: parsed.data.local.dtcs.map((dtc) => ({
+                code: dtc.code,
+                status: dtc.status,
+                occurrences: dtc.occurrences,
+                freezeFrame: dtc.freezeFrame,
+              })),
+              unsupportedPids: parsed.data.local.unsupportedPids,
+              warnings: parsed.data.local.warnings,
+            }
+          : undefined,
         host: parsed.data.host,
         port: parsed.data.port,
         samples: parsed.data.samples,
@@ -183,6 +263,16 @@ export async function scanRoutes(app: FastifyInstance): Promise<void> {
       });
     } catch (error) {
       const message = (error as Error).message;
+      // Données invalides côté client (téléphone) → 400. Panne de liaison → 502.
+      if (error instanceof ClientScanInputError) {
+        return reply.code(400).send({
+          error: {
+            code: 'invalid_scan_data',
+            message,
+            hint: 'XAMOTO n’enregistre que des données réellement lues, avec leur provenance.',
+          },
+        });
+      }
       return reply.code(502).send({
         error: {
           code: 'scan_failed',

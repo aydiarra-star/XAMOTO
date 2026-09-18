@@ -46,7 +46,7 @@ contraire). Toutes les entrées sont validées par Zod ; toute erreur respecte l
 | GET | `/api/obd/candidates` | Adresses et ports usuels ELM327 |
 | POST | `/api/obd/probe` | Tester la joignabilité d'un adaptateur (`{ host, port }`) |
 | GET | `/api/obd/simulator/scenarios` | 9 scénarios disponibles |
-| POST | `/api/scans` | Lancer un scan (`mode: obd`\|`simulator`, scénario, symptômes, `analysisMode`) |
+| POST | `/api/scans` | Trois modes : `simulator`, `obd`, **`local`** (mesures relevées par l'application mobile) | Lancer un scan (`mode: obd`\|`simulator`, scénario, symptômes, `analysisMode`) |
 | GET | `/api/scans` | Lister les scans d'un véhicule |
 | GET | `/api/scans/:id` | Détail : mesures, codes, provenance |
 | POST | `/api/scans/:id/clear` | Effacer les défauts (`confirm: true` obligatoire) |

@@ -20,19 +20,56 @@ import {
 import {
   Elm327Adapter,
   ObdSimulator,
+  PID_BY_KEY,
   SCENARIO_BY_ID,
   SimulatorAdapter,
   TcpTransport,
+  type DtcSample,
+  type PidSample,
   type ScanSnapshot,
   type SimulationScenarioId,
 } from '@xamoto/obd';
 import { all, audit, get, id, jsonParse, now, run, type Row } from '../db/index.js';
 import { buildAiContext } from '@xamoto/ai';
 
+/** Mesure envoyée par une application mobile qui a lu le véhicule elle-même. */
+export interface LocalReadingInput {
+  key: string;
+  value: number | null;
+  supported: boolean;
+  unit?: string | null;
+  origin: DataOrigin;
+}
+
+export interface LocalDtcInput {
+  code: string;
+  status?: 'active' | 'pending' | 'stored';
+  occurrences?: number;
+  freezeFrame?: Record<string, number | string | null>;
+}
+
+/**
+ * Mode « local » : la lecture a lieu SUR LE TÉLÉPHONE (§7, §34), le calcul reste
+ * sur le serveur. C'est la même chaîne que pour un adaptateur Wi-Fi : la couche
+ * OBD est côté appareil, le moteur de diagnostic est côté serveur, et les deux
+ * communiquent par des données brutes — jamais par une conclusion.
+ */
+export interface LocalScanInput {
+  protocol?: string | null;
+  device?: { id: string; label: string; kind: 'bluetooth' | 'wifi'; model?: string | null; firmware?: string | null } | null;
+  milOn: boolean;
+  readings: LocalReadingInput[];
+  dtcs: LocalDtcInput[];
+  unsupportedPids?: string[];
+  warnings?: string[];
+}
+
 export interface RunScanOptions {
   userId: string;
   vehicleId: string;
-  mode: 'simulator' | 'obd';
+  mode: 'simulator' | 'obd' | 'local';
+  /** Renseigné uniquement en mode `local`. */
+  local?: LocalScanInput;
   scenario?: SimulationScenarioId;
   /** Adaptateur Wi-Fi : adresse et port de l'adaptateur ELM327. */
   host?: string;
@@ -57,6 +94,101 @@ const engine = new DiagnosticEngine();
 const SERIES_PID_KEYS: PidKey[] = ['engine_rpm', 'coolant_temp', 'battery_voltage', 'o2_b1s1_voltage', 'short_fuel_trim_b1', 'long_fuel_trim_b1'];
 
 type SeriesReading = { key: PidKey; series?: number[] };
+
+/* ─────────────────────── Snapshot d'un scan venu du téléphone ─────────────── */
+
+/**
+ * Erreur de données envoyées par le client (et non panne de liaison) : la route
+ * répond 400 — c'est le téléphone qui doit corriger, pas XAMOTO qui doit réessayer.
+ */
+export class ClientScanInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ClientScanInputError';
+  }
+}
+
+/**
+ * Transforme les mesures envoyées par l'application mobile en instantané de scan.
+ *
+ * Deux refus, volontaires :
+ *   1. un PID que XAMOTO ne sait pas lire n'est PAS enregistré — il n'existe pas
+ *      de « case vide » dans la base, seulement des PID non supportés ;
+ *   2. une donnée marquée `simulated` est refusée : le simulateur vit sur le
+ *      serveur (§30), une mesure envoyée par un téléphone ne peut pas l'être.
+ *      Accepter ce mélange reviendrait à afficher du simulé comme du réel (§47-2).
+ */
+function buildLocalSnapshot(input: {
+  vehicle: { id: string };
+  input: LocalScanInput;
+  sessionId: string;
+  startedAt: string;
+}): ScanSnapshot {
+  const { vehicle, input: local, sessionId, startedAt } = input;
+  const capturedAt = now();
+
+  const readings: PidSample[] = [];
+  const unsupportedPids = new Set<string>(local.unsupportedPids ?? []);
+
+  for (const reading of local.readings) {
+    const definition = PID_BY_KEY.get(reading.key as PidKey);
+    if (!definition) throw new ClientScanInputError(`PID inconnu : ${reading.key}. XAMOTO n'enregistre pas une donnée qu'il ne sait pas lire.`);
+    if (reading.origin === 'simulated') throw new ClientScanInputError(`Donnée simulée refusée en mode local (${reading.key}).`);
+    if (!reading.supported) {
+      unsupportedPids.add(reading.key);
+      continue;
+    }
+    readings.push({
+      key: definition.key,
+      obdPid: definition.obd,
+      label: definition.labelFr,
+      value: reading.value,
+      unit: reading.unit ?? definition.unit,
+      supported: true,
+      origin: reading.origin,
+      capturedAt,
+      condition: definition.condition,
+    });
+  }
+
+  const dtcs: DtcSample[] = local.dtcs.map((dtc) => ({
+    code: dtc.code,
+    status: dtc.status ?? 'stored',
+    occurrences: dtc.occurrences ?? 1,
+    lastSeenAt: capturedAt,
+    freezeFrame: dtc.freezeFrame,
+    origin: 'measured',
+  }));
+
+  // Un instantané sans aucune donnée n'a rien à diagnostiquer : mieux vaut une
+  // erreur explicite qu'un diagnostic « tout va bien » sans fondement.
+  if (readings.length === 0 && dtcs.length === 0) {
+    throw new ClientScanInputError('Aucune donnée lisible reçue du téléphone : le scan n’a rien à analyser.');
+  }
+
+  return {
+    sessionId,
+    vehicleId: vehicle.id,
+    source: 'obd',
+    protocol: local.protocol ?? 'ISO 15765-4 (CAN 11/500)',
+    startedAt,
+    finishedAt: now(),
+    device: local.device
+      ? { id: local.device.id, label: local.device.label, kind: local.device.kind, model: local.device.model ?? null, firmware: local.device.firmware ?? null }
+      : { id: 'mobile-local', label: 'Téléphone — lecture locale', kind: 'bluetooth' },
+    readings,
+    dtcs,
+    milOn: local.milOn,
+    unsupportedPids: [...unsupportedPids],
+    warnings: local.warnings ?? [],
+    notes: [
+      {
+        fr: 'Mesures relevées par l’application mobile. Le calcul du diagnostic a été fait par le moteur XAMOTO sur ces mesures.',
+        en: 'Measurements collected by the mobile app. The diagnosis was computed by the XAMOTO engine on those measurements.',
+      },
+    ],
+  };
+}
 
 /* ────────────────────────────── Scan complet ────────────────────────────── */
 
@@ -104,6 +236,9 @@ export async function runScan(options: RunScanOptions): Promise<ScanOutcome> {
     } finally {
       await adapter.disconnect().catch(() => undefined);
     }
+  } else if (options.mode === 'local') {
+    if (!options.local) throw new ClientScanInputError('Mesures locales manquantes.');
+    snapshot = buildLocalSnapshot({ vehicle, input: options.local, sessionId: obdSessionId, startedAt });
   } else {
     const scenarioId = options.scenario ?? 'normal_engine';
     const adapter = new SimulatorAdapter({ scenario: scenarioId });

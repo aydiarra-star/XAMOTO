@@ -275,10 +275,10 @@ Détail complet : [docs/05-base-de-donnees.md](docs/05-base-de-donnees.md).
 
 ```bash
 npm run typecheck                                     # types paquets + backend + tests
-npm test                                              # 181 tests unitaires
+npm test                                              # 189 tests unitaires
 npm run test:watch                                     # en continu
 
-npm run test:e2e                                       # 45/45 de bout en bout (API + base)
+npm run test:e2e                                       # 53/53 de bout en bout (API + base)
 npm run test:screens                                   # 22/22 (16 écrans + 6 contrôles de langue)
 npm run build                                          # interface (app/web/dist)
 ```
@@ -291,8 +291,9 @@ donnée inventée (code, valeur, spécification, garantie).
 
 Le test de bout en bout vérifie notamment qu'aucune hypothèse « confirmée » n'est
 produite sans test réalisé, qu'un partage au garage est **refusé sans consentement**,
-qu'un code défaut inconnu déclenche la phrase d'indisponibilité, et que la
-synchronisation hors ligne est idempotente.
+qu'un code défaut inconnu déclenche la phrase d'indisponibilité, que la synchronisation
+hors ligne est idempotente, et que **chaque appel de l'application mobile (verbe HTTP
+compris) existe réellement côté serveur**.
 
 Détail complet : [docs/09-tests.md](docs/09-tests.md).
 
@@ -314,6 +315,8 @@ Détail complet : [docs/09-tests.md](docs/09-tests.md).
 | [09-tests.md](docs/09-tests.md) | Vérifications et résultats attendus |
 | [10-afrique.md](docs/10-afrique.md) | Contexte d'usage réel, contraintes matérielles |
 | [11-principes.md](docs/11-principes.md) | Les dix principes absolus et où ils sont vérifiables |
+| [12-multilingue.md](docs/12-multilingue.md) | Trois langues, ce qui est relu, ce qui ne l'est pas |
+| [13-memoire-agent.md](docs/13-memoire-agent.md) | Journal de bord : état d'avancement, décisions, points ouverts |
 
 ---
 

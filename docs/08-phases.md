@@ -72,10 +72,18 @@ Deux interdits structurants :
 | --- | --- | --- |
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
-| Tests unitaires | `npm test` | 181/181 |
-| Bout en bout API | `npm run test:e2e` | 45/45 |
+| Tests unitaires | `npm test` | 189/189 |
+| Bout en bout API | `npm run test:e2e` | 53/53 |
 | Rendu des écrans | `npm run test:screens` | 22/22 (16 écrans + 6 contrôles de langue) |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+La **phase 5** a préparé l'application mobile Flutter (§34, §48) : couche OBD locale
+(transport, ELM327, PID, codes défaut), stockage SQLite et file de synchronisation,
+état applicatif, douze écrans, catalogue wolof généré. Le mode `local` de
+`POST /api/scans` matérialise la frontière du §7 : le téléphone lit, le serveur
+calcule — le serveur refuse une donnée simulée envoyée comme réelle et un PID inconnu.
+⚠️ Le SDK Dart n'étant pas installable ici, **le code mobile n'a pas été compilé** :
+voir [09-tests.md](09-tests.md) § 6 et [../app/mobile/README.md](../app/mobile/README.md).
 
 La **phase 4** a enrichi la base documentaire et ajouté les règles par système :
 8 nouveaux documents sourcés (freinage/ABS, airbag, boîte automatique, réseau CAN,

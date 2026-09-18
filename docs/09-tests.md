@@ -21,10 +21,11 @@ npm test                 # exécution unique
 npm run test:watch       # en continu pendant le développement
 ```
 
-**181 vérifications** réparties en dix suites, sans base de données ni réseau :
+**189 vérifications** réparties en onze suites, sans base de données ni réseau :
 
 | Suite | Ce qui est prouvé |
 | --- | --- |
+| `tools/test/mobile_contract.test.ts` (8) | **Contrat mobile ↔ serveur** : le projet Dart est complet, les écrans déclarés existent et sont branchés, les phrases du §16 sont identiques partout, les scénarios simulés du mobile sont ceux du serveur, le catalogue wolof embarqué est exactement celui qui est généré, et **aucun mot wolof n'est recopié à la main** |
 | `shared/test/levels.test.ts` (10) | Ordre des niveaux de gravité et de certitude, `worstSafety`, `weakestCertainty` (liste vide → NON DISPONIBLE), `capCertainty` qui ne peut que réduire |
 | `diagnostic/test/systems.test.ts` (18) | Règles **par système** : couverture des quinze systèmes, ordre de vérification freinage/réseau/boîte/airbag/climatisation, aucune cause confirmée là où l'OBD ne lit rien, déterminisme |
 | `diagnostic/test/seedSql.test.ts` (4) | L'export PostgreSQL (`database/seed/001_knowledge.sql`) est **exactement** celui que produit le code, et le graphe de pièces couvre toutes les pièces citées par la base |
@@ -72,7 +73,7 @@ inexistantes.
 npm run test:e2e
 ```
 
-45 vérifications, sur une base neuve :
+53 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
@@ -91,6 +92,8 @@ npm run test:e2e
 | 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
 | 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
 | 33 bis | Multilingue | Question en wolof → `language.effective = 'fr'`, `fallback: true`, explication présente ; aucune erreur de saisie |
+| 33 sexies | Scan local (mobile) | Le téléphone lit, le serveur calcule : `mode: 'local'` accepté, aucune mention MODE SIMULATION, PID non supportés listés ; une donnée `simulated` est **refusée** ; un PID inconnu est **refusé** ; un scan vide ne produit pas un « tout va bien » |
+| 33 septies | Contrat de routes du mobile | Chaque appel du mobile (verbe HTTP + chemin) correspond à une route réellement enregistrée par le serveur, et aucune constante de chemin ne pointe vers une route absente — `app.hasRoute()`, pas un sondage |
 | 33 quinquies | Freinage : un code de châssis n'est pas une pièce | Le scénario `abs_fault` produit bien un code C ; XAMOTO affiche que le code désigne un **circuit** ; aucune hypothèse n'est « confirmée » sur un système que l'OBD ne lit pas |
 | 33 quater | Couverture par système | Les quinze systèmes sont exposés avec leurs limites ; l'airbag est annoncé `not_accessible`, jamais « sain » ; règles dédiées et générales distinguées |
 | 34–35 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |
@@ -158,3 +161,22 @@ curl -s localhost:3000/api/health
 - Tests de charge sur `/api/scans` (le scan est l'opération la plus coûteuse).
 - Tests d'accessibilité et de lisibilité en plein soleil (contraste, taille de police).
 - Vérification sur un adaptateur ELM327 réel, avec deux boîtiers différents.
+
+---
+
+## 6. Application mobile (Dart) : ce qui n'est PAS vérifié ici
+
+Le SDK Flutter/Dart n'est pas installable dans cet environnement (`pub.dev` et
+`storage.googleapis.com` injoignables). Le code de `app/mobile/` est donc livré
+**sans exécution**, et cette section existe pour que personne ne l'oublie.
+
+| Vérifié automatiquement | Non vérifié (à faire avec le SDK) |
+| --- | --- |
+| Chemins et verbes HTTP conformes au serveur | `flutter analyze` (règles dans `analysis_options.yaml`) |
+| Phrases du §16 identiques au reste du produit | `flutter test` (`app/mobile/test/`, 4 fichiers) |
+| Écrans déclarés présents et branchés | Rendu réel, ergonomie, accessibilité |
+| Catalogue wolof généré et non recopié | Liaison Bluetooth sur un vrai adaptateur ELM327 |
+| Scénarios simulés alignés sur le serveur | Comportement hors ligne en situation réelle |
+
+Les tests Dart sont écrits (`app/mobile/test/` : décodage PID, codes défaut, réponses
+ELM327, niveaux, file de synchronisation, catalogue wolof) mais **n'ont jamais tourné**.
