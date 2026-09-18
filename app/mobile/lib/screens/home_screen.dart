@@ -129,10 +129,46 @@ class HomeScreen extends StatelessWidget {
             ),
 
             SectionCard(
-              title: i18n.t('Entretien', 'Maintenance'),
-              child: TextButton(
-                onPressed: () => Navigator.pushNamed(context, Routes.maintenance),
-                child: Text(i18n.t('Voir le plan d’entretien', 'View the maintenance plan')),
+              title: i18n.t('Agir', 'Act'),
+              subtitle: i18n.t(
+                'Après un diagnostic, ces écrans servent à décider — et à vérifier ce qu’on vous annonce.',
+                'After a diagnosis, these screens help you decide — and check what you are told.',
+              ),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: <Widget>[
+                  TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, Routes.maintenance),
+                    icon: const Icon(Icons.build),
+                    label: Text(i18n.t('Entretien', 'Maintenance')),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, Routes.postRepair),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text(i18n.t('Après réparation', 'After a repair')),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, Routes.secondOpinion),
+                    icon: const Icon(Icons.compare_arrows),
+                    label: Text(i18n.t('Seconde opinion', 'Second opinion')),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, Routes.quotes),
+                    icon: const Icon(Icons.receipt_long),
+                    label: Text(i18n.t('Devis', 'Quotes')),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, Routes.inspection),
+                    icon: const Icon(Icons.fact_check_outlined),
+                    label: Text(i18n.t('Inspection avant achat', 'Pre-purchase inspection')),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, Routes.alerts),
+                    icon: const Icon(Icons.notifications_none),
+                    label: Text(i18n.t('Alertes', 'Alerts')),
+                  ),
+                ],
               ),
             ),
           ],

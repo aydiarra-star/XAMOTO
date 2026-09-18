@@ -120,7 +120,7 @@ Trois véhicules et trois diagnostics simulés sont alors disponibles, tous éti
 
 ```
 app/web      PWA React (17 écrans, hors ligne)
-app/mobile   Flutter (V2)
+app/mobile   Flutter (17 écrans, non compilé ici — voir app/mobile/README.md)
      │
 backend      Fastify + Zod — auth, routes, services, persistance
      │
@@ -275,10 +275,10 @@ Détail complet : [docs/05-base-de-donnees.md](docs/05-base-de-donnees.md).
 
 ```bash
 npm run typecheck                                     # types paquets + backend + tests
-npm test                                              # 189 tests unitaires
+npm test                                              # 192 tests unitaires
 npm run test:watch                                     # en continu
 
-npm run test:e2e                                       # 65/65 de bout en bout (API + base)
+npm run test:e2e                                       # 67/67 de bout en bout (API + base)
 npm run test:screens                                   # 23/23 (17 écrans + 6 contrôles de langue)
 npm run build                                          # interface (app/web/dist)
 ```

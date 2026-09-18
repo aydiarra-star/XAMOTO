@@ -5,7 +5,7 @@ travail**. Il existe pour qu'une session suivante (agent ou humain) reprenne le
 projet exactement là où il en est, sans refaire ce qui a été fait ni défaire ce qui
 a été décidé.
 
-Dernière mise à jour : phase 6 (écran devis web).
+Dernière mise à jour : phase 7 (écrans mobiles manquants + défaut `repairs` corrigé).
 
 ---
 
@@ -21,6 +21,7 @@ Dernière mise à jour : phase 6 (écran devis web).
 | 4 bis | Scénario de freinage simulé, contrat de routes | ✅ livrée |
 | 5 | **Application mobile Flutter** (code écrit, non compilé ici) + mémoire d'agent | ✅ livrée, avec réserve |
 | 6 | **Écran devis web** (§27) + devis de démonstration + contrôles e2e du devis | ✅ livrée |
+| 7 | **Cinq écrans mobiles** (devis, après-réparation, seconde opinion, inspection, alertes) + correction de `POST /api/repairs` | ✅ livrée, avec la réserve « non compilé » |
 
 ### Réserve à connaître sur la phase 5
 
@@ -40,8 +41,8 @@ SDK Dart installé — vérifié à nouveau en phase 5). Conséquence :
 
 ```bash
 npm install                       # obligatoire après une remise à zéro de l'espace de travail
-npm test                          # 189 vérifications, 11 suites
-npm run test:e2e                  # 65 vérifications de bout en bout (API + base)
+npm test                          # 192 vérifications, 12 suites
+npm run test:e2e                  # 67 vérifications de bout en bout (API + base)
 npm run test:screens              # 23 rendus d'écran (17 écrans + 6 contrôles de langue)
 npm run typecheck                 # 0 erreur attendue
 npm run build                     # app/web/dist — ~290 kB
@@ -67,6 +68,16 @@ le web et sur le téléphone. Le mode `local` **refuse** :
 - une origine `simulated` — le simulateur vit sur le serveur (§47-2) ;
 - un PID que XAMOTO ne sait pas lire — il n'existe pas de « case vide » en base ;
 - un scan entièrement vide — mieux vaut une erreur qu'un « tout va bien » sans preuve.
+
+### Ce qui se vérifie sans compilateur est vérifié
+
+Le SDK Dart n'existe pas ici, et cela n'autorise pas à livrer du code jamais
+regardé. Trois familles d'erreurs sont donc attrapées sans compilateur, par
+`tools/test/dart_static.test.ts` : délimiteurs déséquilibrés, symbole `Api.x` ou
+`Routes.x` inexistant, import cassé. Un quatrième contrôle fige la dette connue :
+trois imports inutilisés antérieurs sont listés nommément, et tout NOUVEL import
+inutilisé fait échouer le test. Ce que cela ne remplace pas est écrit dans le même
+fichier : ni les types, ni la nullabilité, ni `flutter analyze`, ni un essai réel.
 
 ### Un devis incomplet reste incomplet
 
@@ -117,6 +128,7 @@ affiché **avant** le diagnostic, côté web comme côté mobile.
 | 55 pièces du code absentes de `002_reference.sql` | `seedSql.test.ts` | Ajoutées |
 | `POST /api/quotes` ne renvoyait que `{ id }` là où l'analyse renvoie le devis | Contrôle e2e du devis | Le devis créé est renvoyé, sérialisé par la **même** fonction que la liste (`serializeQuote`) |
 | `POST /api/quotes` répondait 404 à l'analyse juste après sa création | Contrôle e2e (l'identifiant n'était pas lu au bon endroit) | Corrigé en même temps que le défaut ci-dessus |
+| **`POST /api/repairs` répondait 500 depuis la phase 2** : la route écrivait `repairs.odometer_km`, colonne inexistante | Écriture du premier écran qui appelle la route (mobile « après réparation ») | Colonne ajoutée (SQLite + PostgreSQL) **et** `applyMigrations()` au démarrage pour les bases déjà installées ; bloc e2e qui rejoue l'appel |
 
 ---
 
@@ -137,7 +149,11 @@ affiché **avant** le diagnostic, côté web comme côté mobile.
 9. Un montant est toujours porté par une **ligne** de devis (`currency` par ligne) ;
    la table `quotes` n'a pas de colonne devise, et une ligne sans montant est refusée
    plutôt que complétée par un zéro.
-10. Les phrases de sécurité sont **littérales** ; elles sont dupliquées à l'identique
+10. Une colonne ajoutée à une table existante s'accompagne d'une entrée dans
+   `MIGRATIONS` (`backend/src/db/index.ts`) : `CREATE TABLE IF NOT EXISTS` ne
+   touche pas une base déjà créée, et une base installée doit continuer de marcher
+   sans réinitialisation.
+11. Les phrases de sécurité sont **littérales** ; elles sont dupliquées à l'identique
    côté mobile et un test compare les deux copies à `shared/src/index.ts`.
 
 ---
@@ -146,12 +162,15 @@ affiché **avant** le diagnostic, côté web comme côté mobile.
 
 | Sujet | État |
 | --- | --- |
-| Relecture native des 8 consignes de sécurité wolof | **bloquant produit** : sans relecteur nommé, elles restent en français |
+| Relecture native des 8 consignes de sécurité wolof | **bloquant produit** : sans relecteur nommé, elles restent en français. Le dispositif est prêt (`shared/src/i18n.ts`, catalogue généré, test d'égalité) : il ne manque qu'un locuteur qui signe |
+| Première exécution réelle de l'application mobile | `flutter create --platforms=android,ios .` puis `pub get`, `analyze`, `test`, `run --dart-define=XAMOTO_API=…` : pas à pas dans `app/mobile/README.md` |
+| Trois imports inutilisés détectés sans SDK | listés dans `tools/test/dart_static.test.ts` ; à retirer après un premier `flutter analyze` (le test refuse tout nouvel import mort) |
+| Données réelles | **aucune mesure réelle n'a jamais traversé le système** : tout vient du simulateur. Le mode `local` refuse explicitement une origine `simulated`, ce qui rend l'essai matériel interprétable |
 | `flutter analyze` / `flutter test` / essai matériel | à faire sur un poste avec SDK et un adaptateur ELM327 |
 | Pilote Bluetooth Android/iOS | contrat fourni (`lib/obd/bluetooth_driver.dart`), implémentation à écrire |
 | Notifications d'entretien | V2, dépend du natif |
 | Photos et documents du véhicule | V2 |
-| Devis côté mobile | l'écran web est livré (phase 6) ; l'écran Flutter reste à écrire |
+| Devis, après-réparation, seconde opinion, inspection et alertes côté mobile | écrans **écrits** en phase 7 (17 écrans comme le web) ; ils restent « proposés » tant que `flutter analyze` / `flutter test` n'ont pas tourné sur un poste équipé |
 | Devis envoyés par le garage et devis comparés | V2 : une place de marché exige un cadre contractuel |
 | Mode hors ligne du web | le Service Worker existe (`app/web/public/sw.js`) : coquille en cache, `/api` **jamais** caché (une mesure ancienne ne doit pas passer pour actuelle). Reste : file d'attente d'écriture côté client |
 

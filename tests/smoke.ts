@@ -285,6 +285,11 @@ async function main(): Promise<void> {
     'lib/screens/report_screen.dart',
     'lib/screens/maintenance_screen.dart',
     'lib/screens/garages_screen.dart',
+    'lib/screens/quotes_screen.dart',
+    'lib/screens/post_repair_screen.dart',
+    'lib/screens/second_opinion_screen.dart',
+    'lib/screens/inspection_screen.dart',
+    'lib/screens/alerts_screen.dart',
   ]) {
     const source = readFileSync(resolve(mobileRoot, file), 'utf8');
     // Un appel peut choisir son chemin dans une expression (`demo ? Api.demo :
@@ -526,6 +531,36 @@ async function main(): Promise<void> {
     'Le devis de démonstration annonce des montants fictifs',
     (demoQuotes.json().quotes as Array<{ factualSummary?: string }>).every((quote) => !quote.factualSummary || quote.factualSummary.includes('fictif') || quote.factualSummary.includes('fictifs')),
     '',
+  );
+
+  /* ── 10 ter. Réparation : écrite, relue, kilométrage compris ─────────── */
+  // Ce bloc n'est pas décoratif : il rejoue exactement ce qui a échoué pendant
+  // quatre phases. `POST /api/repairs` écrivait une colonne `odometer_km` que la
+  // table n'avait pas : la route répondait 500 et personne ne l'avait appelée,
+  // parce qu'aucun écran ne l'utilisait. Un test qui appelle la route suffit à
+  // l'attraper — et il manquait.
+  const repair = await app.inject({
+    method: 'POST',
+    url: '/api/repairs',
+    headers: auth,
+    payload: {
+      vehicleId: firstVehicle?.id,
+      diagnosticSessionId: diagnosticId,
+      description: 'Remplacement de la batterie (contrôle e2e)',
+      partsReplaced: [{ label: 'batterie', quantity: 1 }],
+      costAmount: 65000,
+      currency: 'XOF',
+      odometerKm: 142200,
+    },
+  });
+  check('Réparation enregistrée', repair.statusCode === 201, `HTTP ${repair.statusCode}`);
+
+  const repairs = await app.inject({ method: 'GET', url: `/api/repairs?vehicleId=${firstVehicle?.id}`, headers: auth });
+  const storedRepair = (repairs.json().repairs as Array<{ id: string; odometerKm: number | null }>)[0];
+  check(
+    'Kilométrage de la réparation conservé, pas perdu à l’écriture',
+    storedRepair?.id === repair.json().id && storedRepair?.odometerKm === 142200,
+    `${storedRepair?.odometerKm ?? 'absent'}`,
   );
 
   const syncPush = await app.inject({

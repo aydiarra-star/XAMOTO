@@ -299,6 +299,10 @@ CREATE TABLE IF NOT EXISTS repairs (
   garage_id             TEXT REFERENCES garages(id) ON DELETE SET NULL,
   performed_at          TEXT NOT NULL,
   performed_by          TEXT NOT NULL DEFAULT 'unknown',
+  -- Kilométrage au moment de la réparation : sans lui, impossible de dater
+  -- une usure par rapport à l'entretien. La route l'écrivait depuis la phase 2
+  -- alors que la colonne n'existait pas : voir applyMigrations().
+  odometer_km           INTEGER,
   created_at            TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_repairs_vehicle ON repairs(vehicle_id, performed_at DESC);

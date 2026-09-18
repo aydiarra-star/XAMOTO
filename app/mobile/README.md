@@ -19,8 +19,42 @@ Ce qui a été fait à la place, et qui est vérifié automatiquement :
 | **Écrans** | `npm test` | Un écran déclaré dans `routes.dart` sans fichier, ou non branché dans `app.dart` |
 | **Catalogue wolof** | `npm test` | Un mot wolof recopié à la main, ou un catalogue embarqué différent de `shared/src/i18n.ts` |
 | **Scénarios simulés** | `npm test` | Un scénario proposé sur mobile que le serveur ne connaît pas |
+| **Dart statique** | `npm test` | Un délimiteur oublié, un symbole `Api.x` / `Routes.x` inexistant, un import cassé — sans compilateur (12 suites, 192 tests au total) |
 
-**Ce qui reste à faire sur un poste avec SDK** — dans cet ordre :
+## Première exécution sur un poste équipé — pas à pas
+
+Le dossier ne contient **que** le code Dart (`lib/`, `test/`, `pubspec.yaml`) : les
+dossiers de plateforme ne sont pas versionnés, parce qu'ils sont générés par le SDK
+et qu'aucun SDK n'a pu les produire ici. La toute première étape est donc de les
+créer — c'est la commande qui manque à qui essaie `flutter run` directement.
+
+```bash
+cd app/mobile
+flutter create --platforms=android,ios --org com.xamoto .   # génère android/ et ios/ (n'écrase pas lib/)
+flutter pub get                                             # résout pubspec.yaml
+flutter analyze                                             # doit sortir sans erreur
+flutter test                                                # 4 fichiers de test/ (niveaux, PID, file d'attente, wolof)
+flutter run --dart-define=XAMOTO_API=http://10.0.2.2:3000   # émulateur Android → serveur local
+```
+
+Points à connaître avant d'interpréter un résultat :
+
+- **L'adresse du serveur** est le seul réglage : `XAMOTO_API`. Depuis un émulateur
+  Android, `10.0.2.2` désigne la machine hôte ; depuis un téléphone réel, c'est
+  l'adresse IP de votre ordinateur sur le même réseau (et le port 3000 doit être
+  joignable). Lancé depuis ce dépôt : `npm start` (API) ou `npm run dev` (API + web).
+- **Trois imports inutilisés connus** subsistent dans du code antérieur
+  (`guided_tests_screen.dart`, `maintenance_screen.dart`, `vehicles_screen.dart`) :
+  `flutter analyze` les signale, ils ne cassent pas l'exécution, et ils sont listés
+  dans `tools/test/dart_static.test.ts`. Le jour où l'analyseur tourne, retirez-les
+  et videz cette liste : le test refusera tout NOUVEL import inutilisé.
+- **Le Bluetooth ne se teste pas sur émulateur** : il faut un téléphone et un
+  adaptateur ELM327 réel. Sans adaptateur, l'application fonctionne en mode
+  démonstration (simulateur côté serveur, bandeau « MODE SIMULATION »).
+- **Aucun écran ne doit être considéré comme vérifié avant `flutter analyze` +
+  `flutter test`** : c'est la règle du projet, pas une précaution de style.
+
+Le reste de cette page décrit ce qui reste à faire, dans l'ordre :
 
 ```bash
 cd app/mobile
@@ -43,8 +77,36 @@ lib/
 ├── storage/        # SQLite local : véhicules, scans, diagnostics, file d'attente
 ├── state/          # état applicatif partagé + synchronisation
 ├── i18n/           # textes fr/en + catalogue wolof GÉNÉRÉ
-└── screens/        # 12 écrans
+└── screens/        # 17 écrans
 ```
+
+### Les 17 écrans
+
+| Écran | Section | Ce qu'il fait |
+| --- | --- | --- |
+| `login_screen` | §34 | Connexion, mode démonstration |
+| `home_screen` | §1 | État du véhicule, « puis-je rouler ? », entrées « Agir » |
+| `vehicles_screen` | §6 | Ajout et sélection des véhicules |
+| `scan_screen` | §7, §8 | Scan réel (Bluetooth) ou simulé, toujours étiqueté |
+| `diagnostic_screen` | §9, §10 | Constats, hypothèses, certitude et sécurité |
+| `can_i_drive_screen` | §12 | Réponse justifiée, sans garantie |
+| `guided_tests_screen` | §17 | Tests guidés, résultat **confirmé** par l'utilisateur |
+| `assistant_screen` | §13 | Assistant explicatif anti-hallucination |
+| `maintenance_screen` | §22 | Plan d'entretien et échéances |
+| `garages_screen` | §21 | Annuaire, carte, partage consenti |
+| `report_screen` | §25 | Rapport partageable et QR |
+| `settings_screen` | §40 | Langue, synchronisation, données locales |
+| `quotes_screen` | §27 | Devis reçu : saisie sans montant inventé, analyse factuelle |
+| `post_repair_screen` | §19 | Réparation déclarée puis comparaison avant/après |
+| `second_opinion_screen` | §20 | Diagnostic reçu confronté aux mesures, questions à poser |
+| `inspection_screen` | §24 | Inspection avant achat, scores et points bloquants |
+| `alerts_screen` | §22 | Alertes mesurées, marquage comme lu |
+
+Deux règles communes à ces trois derniers écrans, parce qu'ils sont ceux où l'on
+est tenté d'inventer : **aucun montant n'est écrit à la place du garage** (une
+ligne de devis sans montant bloque l'enregistrement au lieu de recevoir un `0`),
+et **un devis sans lien avec une mesure n'est pas une faute** (freinage,
+climatisation, carrosserie ne sont pas lisibles en OBD).
 
 ### La frontière qui compte (§7, §9)
 

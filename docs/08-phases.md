@@ -72,10 +72,28 @@ Deux interdits structurants :
 | --- | --- | --- |
 | Types (paquets, backend, tests) | `npm run typecheck` | 0 erreur |
 | Types (interface web) | `npx tsc -p app/web/tsconfig.json --noEmit` | 0 erreur |
-| Tests unitaires | `npm test` | 189/189 |
-| Bout en bout API | `npm run test:e2e` | 65/65 |
+| Tests unitaires | `npm test` | 192/192 (dont un vérificateur statique du Dart, faute de SDK) |
+| Bout en bout API | `npm run test:e2e` | 67/67 |
 | Rendu des écrans | `npm run test:screens` | 23/23 (17 écrans + 6 contrôles de langue) |
 | Construction de l'interface | `npm run build` | `app/web/dist` produit |
+
+La **phase 7** a écrit les **cinq écrans mobiles manquants** — devis (§27),
+après-réparation (§19), seconde opinion (§20), inspection avant achat (§24),
+alertes (§22) — et corrigé un défaut réel trouvé en chemin : `POST /api/repairs`
+répondait **500 depuis la phase 2**, parce que la route écrivait une colonne
+`odometer_km` absente de la table. Aucun écran n'appelait cette route, donc
+personne ne l'avait vue. Deux conséquences :
+
+- la colonne existe désormais (SQLite **et** PostgreSQL), et `applyMigrations()`
+  l'ajoute aux bases déjà installées sans rien réinitialiser — la migration n'est
+  pas une convention, elle est exécutée au démarrage et vérifiée par les tests ;
+- un bloc e2e rejoue l'appel de bout en bout (`HTTP 201`, kilométrage conservé).
+
+Le mobile passe de 12 à **17 écrans**, comme le web. Comme le SDK Dart n'est
+toujours pas installable ici, ce qui est vérifié reste le **contrat** :
+`tools/test/mobile_contract.test.ts` (écrans déclarés, branchés, sans chemin
+recopié) et le e2e (**27 appels** verbe + chemin sur **21 routes**, **48 constantes**
+de chemin, toutes confrontées aux routes réellement enregistrées).
 
 La **phase 6** a rendu le devis (§27) utilisable depuis le web. `routes/garages.ts`
 exposait déjà `POST /api/quotes` et son analyse factuelle, mais aucun écran ne s'en
@@ -93,7 +111,7 @@ fonction que la liste, pour que les deux réponses ne puissent plus diverger.
 
 La **phase 5** a préparé l'application mobile Flutter (§34, §48) : couche OBD locale
 (transport, ELM327, PID, codes défaut), stockage SQLite et file de synchronisation,
-état applicatif, douze écrans, catalogue wolof généré. Le mode `local` de
+état applicatif, catalogue wolof généré ; la phase 7 porte le total à dix-sept écrans. Le mode `local` de
 `POST /api/scans` matérialise la frontière du §7 : le téléphone lit, le serveur
 calcule — le serveur refuse une donnée simulée envoyée comme réelle et un PID inconnu.
 ⚠️ Le SDK Dart n'étant pas installable ici, **le code mobile n'a pas été compilé** :

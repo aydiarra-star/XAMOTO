@@ -41,6 +41,11 @@ abstract final class Api {
   static const String diagnosticSecondOpinion = '/api/diagnostics/:id/second-opinion';
   static const String diagnosticCompare = '/api/diagnostics/:id/compare';
 
+  /* ─────────────────── Après réparation (§19) ──────────────────────────── */
+  /// Réparations enregistrées. Une réparation est un FAIT déclaré par
+  /// l'utilisateur ; sa vérification est un autre appel (`diagnosticCompare`).
+  static const String repairs = '/api/repairs';
+
   /* ───────────────────────────── Assistant (§13) ────────────────────────── */
   static const String assistantAsk = '/api/assistant/ask';
   static const String assistantCapabilities = '/api/assistant/capabilities';
@@ -65,6 +70,17 @@ abstract final class Api {
   /* ──────────────────────────── Garages (§21) ───────────────────────────── */
   static const String garages = '/api/garages';
   static const String garage = '/api/garages/:id';
+
+  /* ───────────────────────────── Devis (§27) ────────────────────────────── */
+  /// Enregistrer ce que le garage a écrit, puis le confronter aux mesures.
+  /// Aucun montant n'est jamais écrit par XAMOTO : une ligne sans montant est
+  /// refusée par le serveur, elle n'est pas complétée par un zéro.
+  static const String quotes = '/api/quotes';
+  static const String quoteAnalysis = '/api/quotes/:id/analysis';
+
+  /* ───────────────────── Inspection avant achat (§24) ───────────────────── */
+  static const String vehicleInspection = '/api/vehicles/:id/inspection';
+  static const String vehicleInspections = '/api/vehicles/:id/inspections';
 
   /* ─────────────────────────── Entretien et alertes ─────────────────────── */
   static const String alerts = '/api/alerts';
@@ -95,6 +111,9 @@ abstract final class Api {
   static String diagnosticSecondOpinionPath(String id) => byId(diagnosticSecondOpinion, id);
   static String diagnosticComparePath(String id) => byId(diagnosticCompare, id);
   static String diagnosticTestResultPath(String id, String testKey) => byId(diagnosticTestResult, id).replaceFirst(':testKey', testKey);
+  static String quoteAnalysisPath(String id) => byId(quoteAnalysis, id);
+  static String vehicleInspectionPath(String id) => byId(vehicleInspection, id);
+  static String vehicleInspectionsPath(String id) => byId(vehicleInspections, id);
   static String knowledgeDtcUnknownPath(String code) => byId(knowledgeDtcUnknown, code);
   static String garagePath(String id) => byId(garage, id);
   static String reportSharePath(String id) => byId(reportShare, id);
@@ -122,6 +141,7 @@ abstract final class Api {
     diagnosticTestResult,
     diagnosticSecondOpinion,
     diagnosticCompare,
+    repairs,
     assistantAsk,
     assistantCapabilities,
     assistantConversations,
@@ -136,6 +156,10 @@ abstract final class Api {
     obdSimulatorScenarios,
     garages,
     garage,
+    quotes,
+    quoteAnalysis,
+    vehicleInspection,
+    vehicleInspections,
     alerts,
     alertsRead,
     parts,

@@ -18,8 +18,34 @@ export function db(): DatabaseSync {
   if (!database) {
     database = new DatabaseSync(config.dbPath);
     database.exec(SCHEMA_SQL);
+    applyMigrations(database);
   }
   return database;
+}
+
+/**
+ * Colonnes ajoutées après la première mise en service.
+ *
+ * `CREATE TABLE IF NOT EXISTS` ne touche pas une table déjà créée : une base
+ * existante garderait donc une colonne manquante et une écriture échouerait à
+ * l'exécution — c'est exactement ce qui est arrivé à `repairs.odometer_km`, que
+ * la route `/api/repairs` écrivait alors que la colonne n'existait pas.
+ *
+ * Chaque entrée est donc vérifiée puis ajoutée si besoin. Aucune donnée n'est
+ * modifiée ni supprimée : ajouter une colonne nullable ne peut rien casser, et
+ * une base déjà à jour ne fait que lire `table_info`.
+ */
+const MIGRATIONS: Array<{ table: string; column: string; definition: string }> = [
+  { table: 'repairs', column: 'odometer_km', definition: 'INTEGER' },
+];
+
+function applyMigrations(handle: DatabaseSync): void {
+  for (const migration of MIGRATIONS) {
+    const columns = handle.prepare(`PRAGMA table_info(${migration.table})`).all() as Array<{ name?: string }>;
+    if (columns.length === 0) continue; // table absente : le schéma la créera
+    if (columns.some((column) => column.name === migration.column)) continue;
+    handle.exec(`ALTER TABLE ${migration.table} ADD COLUMN ${migration.column} ${migration.definition}`);
+  }
 }
 
 export function closeDb(): void {

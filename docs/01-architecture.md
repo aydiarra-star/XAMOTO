@@ -87,7 +87,7 @@ phrase qui mentionne une donnée absente du pack est rejetée (voir
 ```
 XAMOTO/
 ├─ app/
-│  ├─ mobile/                  # Flutter (V2) — même API, même moteur
+│  ├─ mobile/                  # Flutter — 17 écrans, même API, même moteur (non compilé ici)
 │  └─ web/                     # PWA React : 17 écrans + service worker
 ├─ backend/
 │  ├─ src/auth/                # jetons, permissions, consentement

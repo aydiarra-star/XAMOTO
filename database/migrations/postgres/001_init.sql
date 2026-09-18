@@ -320,6 +320,7 @@ CREATE TABLE IF NOT EXISTS repairs (
   garage_id             TEXT REFERENCES garages(id) ON DELETE SET NULL,
   performed_at          TEXT NOT NULL,
   performed_by          TEXT NOT NULL DEFAULT 'unknown',
+  odometer_km           INTEGER,
   created_at            TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_repairs_vehicle ON repairs(vehicle_id, performed_at DESC);

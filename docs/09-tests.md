@@ -21,10 +21,11 @@ npm test                 # exécution unique
 npm run test:watch       # en continu pendant le développement
 ```
 
-**189 vérifications** réparties en onze suites, sans base de données ni réseau :
+**192 vérifications** réparties en douze suites, sans base de données ni réseau :
 
 | Suite | Ce qui est prouvé |
 | --- | --- |
+| `tools/test/dart_static.test.ts` (3) | **Vérification statique du Dart, faute de compilateur** : délimiteurs équilibrés dans les 55 fichiers, tout symbole `Api.x` / `Routes.x` réellement déclaré, imports résolus et aucun import inutilisé **nouveau** (les trois imports morts antérieurs sont listés nommément : la dette est figée, pas oubliée). Ce test attrape ce qu'une relecture humaine rate — il ne remplace ni `flutter analyze` ni un essai sur appareil |
 | `tools/test/mobile_contract.test.ts` (8) | **Contrat mobile ↔ serveur** : le projet Dart est complet, les écrans déclarés existent et sont branchés, les phrases du §16 sont identiques partout, les scénarios simulés du mobile sont ceux du serveur, le catalogue wolof embarqué est exactement celui qui est généré, et **aucun mot wolof n'est recopié à la main** |
 | `shared/test/levels.test.ts` (10) | Ordre des niveaux de gravité et de certitude, `worstSafety`, `weakestCertainty` (liste vide → NON DISPONIBLE), `capCertainty` qui ne peut que réduire |
 | `diagnostic/test/systems.test.ts` (18) | Règles **par système** : couverture des quinze systèmes, ordre de vérification freinage/réseau/boîte/airbag/climatisation, aucune cause confirmée là où l'OBD ne lit rien, déterminisme |
@@ -73,7 +74,7 @@ inexistantes.
 npm run test:e2e
 ```
 
-65 vérifications, sur une base neuve :
+67 vérifications, sur une base neuve :
 
 | # | Vérification | Ce qui est prouvé |
 | --- | --- | --- |
@@ -89,12 +90,13 @@ npm run test:e2e
 | 25–27 | Assistant | Réponse tracée, refus hors sujet, **code non documenté → « Je ne dispose pas de cette donnée »** |
 | 28–30 | Garages | Annuaire, partage avec consentement (201), refus sans consentement (400) |
 | 30 bis | Devis (§27) | Le devis est enregistré **tel que le garage l'a écrit** ; une ligne sans montant est **refusée** (400) au lieu d'être complétée par un `0` ; le devis créé est renvoyé complet ; l'analyse classe chaque poste en « soutenu par une mesure » ou non ; un poste non mesuré produit une **question**, jamais un soupçon ; les mots de jugement de prix n'apparaissent que sous forme niée ; un devis hors diagnostic s'analyse sans erreur (`0` poste lié) ; le compte de démonstration contient un devis dont les montants sont annoncés **fictifs** |
+| 30 ter | Réparation (§19) | `POST /api/repairs` répond 201 et le kilométrage déclaré est **relu** tel quel. Ce bloc existe parce que la route répondait 500 depuis la phase 2 : elle écrivait une colonne absente de la table (voir [13-memoire-agent.md](13-memoire-agent.md) § 4) |
 | 31 | Synchronisation hors ligne | Idempotence (`duplicates`) |
 | 32 | Bluetooth | L'état réel est annoncé (`available`, explication) — aucune promesse |
 | 33 | Bluetooth | **Aucun appareil inventé sans pilote** : liste vide + raison, `certainty: presumption` |
 | 33 bis | Multilingue | Question en wolof → `language.effective = 'fr'`, `fallback: true`, explication présente ; aucune erreur de saisie |
 | 33 sexies | Scan local (mobile) | Le téléphone lit, le serveur calcule : `mode: 'local'` accepté, aucune mention MODE SIMULATION, PID non supportés listés ; une donnée `simulated` est **refusée** ; un PID inconnu est **refusé** ; un scan vide ne produit pas un « tout va bien » |
-| 33 septies | Contrat de routes du mobile | Chaque appel du mobile (verbe HTTP + chemin) correspond à une route réellement enregistrée par le serveur, et aucune constante de chemin ne pointe vers une route absente — `app.hasRoute()`, pas un sondage |
+| 33 septies | Contrat de routes du mobile | Chaque appel du mobile (verbe HTTP + chemin) correspond à une route réellement enregistrée par le serveur, et aucune constante de chemin ne pointe vers une route absente — `app.hasRoute()`, pas un sondage. Depuis la phase 7 : **27 appels sur 21 routes** et **48 constantes**, écrans de devis, après-réparation, seconde opinion, inspection et alertes compris |
 | 33 quinquies | Freinage : un code de châssis n'est pas une pièce | Le scénario `abs_fault` produit bien un code C ; XAMOTO affiche que le code désigne un **circuit** ; aucune hypothèse n'est « confirmée » sur un système que l'OBD ne lit pas |
 | 33 quater | Couverture par système | Les quinze systèmes sont exposés avec leurs limites ; l'airbag est annoncé `not_accessible`, jamais « sain » ; règles dédiées et générales distinguées |
 | 34–35 | Permissions | 401 sans jeton, permissions renvoyées par véhicule |

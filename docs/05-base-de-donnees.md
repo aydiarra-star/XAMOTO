@@ -146,6 +146,16 @@ l'analyse factuelle a donc quelque chose de vrai à confronter. Leurs montants s
 annoncés comme **fictifs** dans le résumé du devis, et un test de bout en bout vérifie
 que cette mention reste présente.
 
+### 3.6 Une colonne ajoutée plus tard est migrée, pas espérée
+
+`CREATE TABLE IF NOT EXISTS` ne modifie pas une table déjà créée : une base
+installée garderait une colonne manquante et l'écriture échouerait à l'exécution.
+C'est arrivé : `POST /api/repairs` écrivait `odometer_km` dans une table qui ne
+l'avait pas et répondait 500. `applyMigrations()` (dans `backend/src/db/index.ts`)
+vérifie donc les colonnes attendues au démarrage et ajoute **seulement** celles
+qui manquent (`ALTER TABLE ... ADD COLUMN`, nullable). Aucune donnée n'est
+réécrite ni supprimée, et une base à jour ne fait que lire `PRAGMA table_info`.
+
 Deux points de modélisation sur `quotes` :
 
 - la table ne porte **pas** de colonne devise : chaque ligne du devis porte la sienne

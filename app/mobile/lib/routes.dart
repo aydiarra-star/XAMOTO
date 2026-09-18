@@ -20,6 +20,11 @@ abstract final class Routes {
   static const String garages = '/garages';
   static const String report = '/report';
   static const String settings = '/settings';
+  static const String alerts = '/alerts';
+  static const String quotes = '/quotes';
+  static const String postRepair = '/post-repair';
+  static const String secondOpinion = '/second-opinion';
+  static const String inspection = '/inspection';
 
   /// Écrans et fichiers correspondants (chemin relatif à `lib/`).
   static const Map<String, String> screens = <String, String>{
@@ -35,5 +40,10 @@ abstract final class Routes {
     garages: 'screens/garages_screen.dart',
     report: 'screens/report_screen.dart',
     settings: 'screens/settings_screen.dart',
+    alerts: 'screens/alerts_screen.dart',
+    quotes: 'screens/quotes_screen.dart',
+    postRepair: 'screens/post_repair_screen.dart',
+    secondOpinion: 'screens/second_opinion_screen.dart',
+    inspection: 'screens/inspection_screen.dart',
   };
 }

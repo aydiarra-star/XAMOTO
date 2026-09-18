@@ -5,15 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'routes.dart';
+import 'screens/alerts_screen.dart';
 import 'screens/assistant_screen.dart';
 import 'screens/can_i_drive_screen.dart';
 import 'screens/diagnostic_screen.dart';
 import 'screens/garages_screen.dart';
 import 'screens/guided_tests_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/inspection_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/maintenance_screen.dart';
+import 'screens/post_repair_screen.dart';
+import 'screens/quotes_screen.dart';
 import 'screens/report_screen.dart';
+import 'screens/second_opinion_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/vehicles_screen.dart';
@@ -50,6 +55,11 @@ class XamotoApp extends StatelessWidget {
         Routes.garages: (_) => const GaragesScreen(),
         Routes.report: (_) => const ReportScreen(),
         Routes.settings: (_) => const SettingsScreen(),
+        Routes.alerts: (_) => const AlertsScreen(),
+        Routes.quotes: (_) => const QuotesScreen(),
+        Routes.postRepair: (_) => const PostRepairScreen(),
+        Routes.secondOpinion: (_) => const SecondOpinionScreen(),
+        Routes.inspection: (_) => const InspectionScreen(),
       },
     );
   }

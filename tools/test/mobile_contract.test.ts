@@ -84,7 +84,17 @@ describe('contrat mobile ↔ serveur', () => {
   it('le mobile construit ses chemins à partir des constantes, pas de littéraux dispersés', () => {
     const endpoints = read('lib/api/endpoints.dart');
     // Les écrans et l'état ne réécrivent pas un chemin complet à la main.
-    for (const file of ['lib/state/app_state.dart', 'lib/state/sync_service.dart', 'lib/screens/guided_tests_screen.dart', 'lib/screens/assistant_screen.dart']) {
+    for (const file of [
+      'lib/state/app_state.dart',
+      'lib/state/sync_service.dart',
+      'lib/screens/guided_tests_screen.dart',
+      'lib/screens/assistant_screen.dart',
+      'lib/screens/quotes_screen.dart',
+      'lib/screens/post_repair_screen.dart',
+      'lib/screens/second_opinion_screen.dart',
+      'lib/screens/inspection_screen.dart',
+      'lib/screens/alerts_screen.dart',
+    ]) {
       const literal = apiPaths(read(file)).filter((path) => !path.includes(':'));
       expect(literal, `${file} réécrit un chemin complet : ${literal.join(', ')}`).toHaveLength(0);
     }
